@@ -1,13 +1,11 @@
-import { Ring } from '../ui/Ring';
+import { TimerSquirclePill } from '../ui/TimerSquirclePill';
 import { EqBars } from '../ui/EqBars';
 import { Mascot } from '../ui/Mascot';
 import { coverFor, useMusic } from '@/store/music';
 import { timerTotal, useTimer } from '@/store/timer';
-import { TIMER_COLOR } from '../widgets/TimerWidget';
-import { fmtMMSS } from '@/lib/date';
 
 /**
- * Isi pill 84x84. Prioritas: timer berjalan > musik diputar > maskot / tanggal.
+ * Isi pill 84x84. Prioritas: timer berjalan > musik diputar > maskot.
  */
 export function IdlePill() {
   const timer = useTimer();
@@ -15,10 +13,11 @@ export function IdlePill() {
 
   if (timer.running) {
     return (
-      <>
-        <Ring size={84} stroke={7} progress={timer.remaining / timerTotal(timer)} color={TIMER_COLOR[timer.mode]} track={`${TIMER_COLOR[timer.mode]}33`} />
-        <span className="pill__time">{fmtMMSS(timer.remaining)}</span>
-      </>
+      <TimerSquirclePill
+        remaining={timer.remaining}
+        total={timerTotal(timer)}
+        mode={timer.mode}
+      />
     );
   }
 

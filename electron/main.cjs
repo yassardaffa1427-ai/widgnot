@@ -1,8 +1,10 @@
 const { app, BrowserWindow, screen, ipcMain, globalShortcut, Menu, Tray, nativeImage } = require('electron');
 const path = require('path');
+const { execFile, exec } = require('child_process');
 
 let mainWindow = null;
 let tray = null;
+let mediaPollTimer = null;
 
 function createWindow() {
   const primaryDisplay = screen.getPrimaryDisplay();
@@ -53,9 +55,53 @@ function createWindow() {
     app.quit();
   });
 
+  // Windows Media Session controls
+  ipcMain.on('toggle-os-media', () => {
+    exec('powershell -NoProfile -Command "(New-Object -ComObject Wscript.Shell).SendKeys([char]179)"', { windowsHide: true });
+  });
+
+  ipcMain.on('next-os-media', () => {
+    exec('powershell -NoProfile -Command "(New-Object -ComObject Wscript.Shell).SendKeys([char]176)"', { windowsHide: true });
+  });
+
+  ipcMain.on('prev-os-media', () => {
+    exec('powershell -NoProfile -Command "(New-Object -ComObject Wscript.Shell).SendKeys([char]177)"', { windowsHide: true });
+  });
+
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
+}
+
+// Background media tracking for Spotify, YouTube, and other laptop players
+function startMediaTracking() {
+  if (process.platform !== 'win32') return;
+
+  const scriptPath = path.join(__dirname, 'get-media.ps1');
+
+  const pollMedia = () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+
+    execFile(
+      'powershell.exe',
+      ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', scriptPath],
+      { windowsHide: true, timeout: 2000 },
+      (err, stdout) => {
+        if (!err && stdout && mainWindow && !mainWindow.isDestroyed()) {
+          try {
+            const data = JSON.parse(stdout.trim());
+            mainWindow.webContents.send('os-media-update', data);
+          } catch {
+            // ignore non-json
+          }
+        }
+      }
+    );
+  };
+
+  // Poll every 2 seconds
+  mediaPollTimer = setInterval(pollMedia, 2000);
+  setTimeout(pollMedia, 1000);
 }
 
 function createTray() {
@@ -109,6 +155,7 @@ function createTray() {
 app.whenReady().then(() => {
   createWindow();
   createTray();
+  startMediaTracking();
 
   // Global hotkey: Alt + W to toggle Widgnot anywhere on Windows
   globalShortcut.register('Alt+W', () => {
@@ -123,6 +170,7 @@ app.whenReady().then(() => {
 });
 
 app.on('will-quit', () => {
+  if (mediaPollTimer) clearInterval(mediaPollTimer);
   globalShortcut.unregisterAll();
 });
 

@@ -3,17 +3,7 @@ import { Island } from './components/island/Island';
 import { DesktopShell } from './components/desktop/DesktopShell';
 import { useTimer } from './store/timer';
 import { useUI } from './store/ui';
-
-declare global {
-  interface Window {
-    electronAPI?: {
-      isElectron?: boolean;
-      setInteractive: (interactive: boolean) => void;
-      closeApp: () => void;
-      onToggleIsland: (callback: () => void) => () => void;
-    };
-  }
-}
+import { useMusic } from './store/music';
 
 export default function App() {
   const isElectron = Boolean(
@@ -46,6 +36,15 @@ export default function App() {
     });
     return unsub;
   }, [goTo, setOpen]);
+
+  // Listener media laptop dari Electron (Spotify, YouTube, browser media)
+  useEffect(() => {
+    if (!window.electronAPI?.onOSMediaUpdate) return;
+    const unsub = window.electronAPI.onOSMediaUpdate((data) => {
+      useMusic.getState().handleOSMedia(data);
+    });
+    return unsub;
+  }, []);
 
   if (isElectron) {
     return (

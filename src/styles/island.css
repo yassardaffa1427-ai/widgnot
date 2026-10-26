@@ -168,6 +168,7 @@
   height: 100%;
   cursor: pointer;
   color-scheme: dark;
+  pointer-events: none;
 }
 .act-form__divider {
   height: 1px;

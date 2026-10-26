@@ -24,6 +24,7 @@ interface MusicState {
   bt: BtStatus;
   btName: string;
   deviceType: 'speaker' | 'airpods';
+  isOSMedia?: boolean;
   addFiles: (files: FileList | File[]) => void;
   toggle: () => void;
   next: () => void;
@@ -33,6 +34,7 @@ interface MusicState {
   toggleDevice: () => void;
   connectSource: (src: 'spotify' | 'youtube') => void;
   disconnectMedia: () => void;
+  handleOSMedia: (payload: OSMediaData) => void;
 }
 
 const STREAMING_TRACKS: Record<'spotify' | 'youtube', Track> = {
@@ -235,6 +237,12 @@ export const useMusic = create<MusicState>((set, get) => {
 
     toggle: () => {
       const s = get();
+      if (s.isOSMedia && window.electronAPI?.toggleOSMedia) {
+        window.electronAPI.toggleOSMedia();
+        set({ playing: !s.playing });
+        return;
+      }
+
       if (!s.hasActiveMedia) {
         // Starts detected stream from YouTube/Spotify
         get().connectSource('youtube');
@@ -258,6 +266,12 @@ export const useMusic = create<MusicState>((set, get) => {
     },
 
     next: () => {
+      const s = get();
+      if (s.isOSMedia && window.electronAPI?.nextOSMedia) {
+        window.electronAPI.nextOSMedia();
+        return;
+      }
+
       if (!get().hasActiveMedia) {
         get().connectSource('youtube');
         return;
@@ -268,6 +282,12 @@ export const useMusic = create<MusicState>((set, get) => {
     },
 
     prev: () => {
+      const s = get();
+      if (s.isOSMedia && window.electronAPI?.prevOSMedia) {
+        window.electronAPI.prevOSMedia();
+        return;
+      }
+
       if (!get().hasActiveMedia) return;
       const { index, tracks, playing, current } = get();
       if (current > 3 || index === 0) {
@@ -308,6 +328,43 @@ export const useMusic = create<MusicState>((set, get) => {
         set({ deviceType: 'speaker', btName: 'MacBook Speaker' });
       } else {
         set({ deviceType: 'airpods', btName: 'AirPods Pro' });
+      }
+    },
+
+    handleOSMedia: (payload: OSMediaData) => {
+      if (payload.hasMedia && payload.title) {
+        const isSpotify = (payload.appId || '').toLowerCase().includes('spotify');
+        const trackSource = isSpotify ? 'spotify' : 'youtube';
+        const osTrack: Track = {
+          id: 'os-active-media',
+          name: payload.title,
+          artist: payload.artist || (isSpotify ? 'Spotify' : 'Laptop Media'),
+          duration: payload.duration || 180,
+          source: trackSource,
+          coverGradient: isSpotify
+            ? 'linear-gradient(135deg, #1DB954 0%, #121212 90%)'
+            : 'linear-gradient(135deg, #ff2a85 0%, #7b1fa2 50%, #1e1035 100%)',
+        };
+
+        set({
+          hasActiveMedia: true,
+          isOSMedia: true,
+          source: trackSource,
+          tracks: [osTrack],
+          index: 0,
+          playing: Boolean(payload.playing),
+          current: payload.position || 0,
+          duration: payload.duration || 180,
+        });
+      } else {
+        const s = get();
+        if (s.isOSMedia) {
+          set({
+            hasActiveMedia: false,
+            isOSMedia: false,
+            playing: false,
+          });
+        }
       }
     },
   };

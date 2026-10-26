@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'motion/react';
 import { contentSpring } from '@/lib/motion';
 import { CalendarDays, Check, Clock } from './Icons';
@@ -38,6 +38,9 @@ export function AddActivityForm({
   const [date, setDate] = useState(initialDate);
   const [time, setTime] = useState(initialTime);
   const [notes, setNotes] = useState('');
+
+  const dateInputRef = useRef<HTMLInputElement>(null);
+  const timeInputRef = useRef<HTMLInputElement>(null);
 
   // Format date display for pill: "20 Apr 2026"
   const dateObj = new Date(date + 'T12:00:00');
@@ -97,15 +100,28 @@ export function AddActivityForm({
               <CalendarDays size={18} style={{ color: '#a3a3a7' }} />
               <span className="act-form__row-text">Tanggal</span>
             </div>
-            <label className="act-form__pill">
+            <div
+              className="act-form__pill"
+              onClick={() => {
+                try {
+                  dateInputRef.current?.showPicker();
+                } catch {
+                  dateInputRef.current?.focus();
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label="Pilih tanggal"
+            >
               <span>{dNum} {shortMonth} {yNum}</span>
               <input
+                ref={dateInputRef}
                 className="act-form__hidden-picker"
                 type="date"
                 value={date}
                 onChange={(e) => e.target.value && setDate(e.target.value)}
               />
-            </label>
+            </div>
           </div>
 
           <div className="act-form__divider" />
@@ -116,15 +132,28 @@ export function AddActivityForm({
               <Clock size={18} style={{ color: '#a3a3a7' }} />
               <span className="act-form__row-text">Waktu</span>
             </div>
-            <label className="act-form__pill">
+            <div
+              className="act-form__pill"
+              onClick={() => {
+                try {
+                  timeInputRef.current?.showPicker();
+                } catch {
+                  timeInputRef.current?.focus();
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label="Ubah waktu"
+            >
               <span>{formattedTime}</span>
               <input
+                ref={timeInputRef}
                 className="act-form__hidden-picker"
                 type="time"
                 value={time}
                 onChange={(e) => e.target.value && setTime(e.target.value)}
               />
-            </label>
+            </div>
           </div>
         </div>
 

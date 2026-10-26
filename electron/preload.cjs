@@ -9,4 +9,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('toggle-island', handler);
     return () => ipcRenderer.removeListener('toggle-island', handler);
   },
+  onOSMediaUpdate: (callback) => {
+    const handler = (_, data) => callback(data);
+    ipcRenderer.on('os-media-update', handler);
+    return () => ipcRenderer.removeListener('os-media-update', handler);
+  },
+  toggleOSMedia: () => ipcRenderer.send('toggle-os-media'),
+  nextOSMedia: () => ipcRenderer.send('next-os-media'),
+  prevOSMedia: () => ipcRenderer.send('prev-os-media'),
 });
