@@ -1,7 +1,7 @@
 {
   "name": "widgnot",
   "private": true,
-  "version": "0.1.2",
+  "version": "0.1.3",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -9,6 +9,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
+    "generate:icons": "electron scripts/render-icon.cjs && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/make-ico.ps1",
     "app:dev": "cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron electron/main.cjs",
     "electron:dev": "concurrently -k \"vite --port 5173\" \"cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron electron/main.cjs\"",
     "build:exe": "npm run build && electron-builder --win",
@@ -18,6 +19,7 @@
   "build": {
     "appId": "com.widgnot.app",
     "productName": "Widgnot",
+    "icon": "build/icon.ico",
     "compression": "normal",
     "asarUnpack": [
       "electron/*.ps1"
@@ -28,9 +30,11 @@
     "files": [
       "dist/**/*",
       "electron/**/*",
+      "build/icon.*",
       "package.json"
     ],
     "win": {
+      "icon": "build/icon.ico",
       "target": [
         {
           "target": "nsis",

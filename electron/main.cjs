@@ -10,11 +10,15 @@ function createWindow() {
   const primaryDisplay = screen.getPrimaryDisplay();
   const { x, y, width, height } = primaryDisplay.workArea;
 
+  const appIconPath = path.join(__dirname, '../build/icon.png');
+  const icon = fs.existsSync(appIconPath) ? nativeImage.createFromPath(appIconPath) : undefined;
+
   mainWindow = new BrowserWindow({
     x,
     y,
     width,
     height,
+    icon,
     transparent: true,
     frame: false,
     alwaysOnTop: true,
@@ -127,22 +131,31 @@ function startMediaTracking() {
 
 function createTray() {
   try {
-    const size = 16;
-    const buffer = Buffer.alloc(size * size * 4);
-    for (let y = 0; y < size; y++) {
-      for (let x = 0; x < size; x++) {
-        const idx = (y * size + x) * 4;
-        const dx = x - size / 2;
-        const dy = y - size / 2;
-        if (dx * dx + dy * dy <= (size / 2 - 1) * (size / 2 - 1)) {
-          buffer[idx] = 255;     // B
-          buffer[idx + 1] = 136; // G
-          buffer[idx + 2] = 0;   // R
-          buffer[idx + 3] = 255; // A
+    const icoPath = path.join(__dirname, '../build/icon.ico');
+    const pngPath = path.join(__dirname, '../build/icon.png');
+    let icon;
+    if (fs.existsSync(icoPath)) {
+      icon = nativeImage.createFromPath(icoPath).resize({ width: 16, height: 16 });
+    } else if (fs.existsSync(pngPath)) {
+      icon = nativeImage.createFromPath(pngPath).resize({ width: 16, height: 16 });
+    } else {
+      const size = 16;
+      const buffer = Buffer.alloc(size * size * 4);
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const idx = (y * size + x) * 4;
+          const dx = x - size / 2;
+          const dy = y - size / 2;
+          if (dx * dx + dy * dy <= (size / 2 - 1) * (size / 2 - 1)) {
+            buffer[idx] = 255;
+            buffer[idx + 1] = 136;
+            buffer[idx + 2] = 0;
+            buffer[idx + 3] = 255;
+          }
         }
       }
+      icon = nativeImage.createFromBuffer(buffer, { width: size, height: size });
     }
-    const icon = nativeImage.createFromBuffer(buffer, { width: size, height: size });
     tray = new Tray(icon);
     tray.setToolTip('Widgnot — Hidden Island Widget (Alt+W)');
     const contextMenu = Menu.buildFromTemplate([

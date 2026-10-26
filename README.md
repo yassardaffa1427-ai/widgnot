@@ -1,62 +1,85 @@
-# Widgnot
+<p align="center">
+  <img src="build/icon.png" width="128" height="128" alt="Widgnot Logo" style="border-radius: 32px; box-shadow: 0 12px 36px rgba(0,0,0,0.45);" />
+</p>
 
-Hidden sidebar widget berbentuk "island" (ala Dynamic Island): **Music · Note · Calendar · Timer · Todo**.
-Pill 84px menempel di tepi layar, bisa di-drag, dan mengembang dengan animasi spring "liquid".
+<h1 align="center">Widgnot</h1>
 
-Sumber desain: Figma `widgnot` (file key `FrgTIuGpf3fpWDsiTTJOK1`) — lihat `docs/FIGMA_MAP.md`.
+<p align="center">
+  <b>Hidden Island Desktop Widget</b> dengan animasi liquid Dynamic Island untuk Windows.<br />
+  <i>Music Player · Notes · Calendar & Activities · Timer · Todo List</i>
+</p>
 
-## Menjalankan
+<p align="center">
+  <a href="https://github.com/yassardaffa1427-ai/widgnot/releases/latest">
+    <img src="https://img.shields.io/github/v/release/yassardaffa1427-ai/widgnot?style=for-the-badge&color=0088ff&label=Download%20Installer" alt="Download Windows Installer" />
+  </a>
+  <img src="https://img.shields.io/badge/Platform-Windows-0078d7?style=for-the-badge&logo=windows&logoColor=white" alt="Windows" />
+  <img src="https://img.shields.io/badge/Framework-React%2018%20%2B%20TypeScript-3178c6?style=for-the-badge&logo=typescript&logoColor=white" alt="React + TS" />
+  <img src="https://img.shields.io/badge/Engine-Electron-47848f?style=for-the-badge&logo=electron&logoColor=white" alt="Electron" />
+  <img src="https://img.shields.io/badge/License-MIT-10b981?style=for-the-badge" alt="License" />
+</p>
+
+---
+
+## ✦ Fitur Utama
+
+- **🏝️ Hidden Dynamic Island**: Widget mengambang transparan di tepi layar dengan animasi spring "liquid" yang mulus.
+- **🎵 Live Media Synchronization**: Melacak secara langsung apa pun lagu yang sedang diputar di laptop, termasuk **YouTube** di browser (Opera, Opera GX, Chrome, Edge, Firefox) dan **Spotify Desktop**, lengkap dengan kontrol putar/jeda, lagu berikutnya, dan sebelumnya.
+- **📝 Quick Notes**: Tulis dan simpan catatan cepat dengan mudah langsung dari island.
+- **📅 Calendar & Activities**: Jadwal aktivitas harian dengan picker tanggal dan waktu terintegrasi.
+- **⏳ Focus & Idle Timer**: Timer squircle gradient interaktif (desain Figma node `11:1282`) untuk melacak waktu fokus.
+- **✅ Todo List**: Checklist tugas harian yang tersimpan secara lokal dan persisten.
+- **⚡ Background & System Tray**: Aplikasi berjalan di belakang layar tanpa mengotori taskbar. Dapat diakses kapan saja lewat icon System Tray atau hotkey global.
+
+---
+
+## ⌨️ Pintasan Keyboard (Hotkeys)
+
+| Shortcut | Aksi |
+| --- | --- |
+| `Alt + W` | **Buka / Tutup Widgnot** dari aplikasi apa pun |
+| `Esc` | Tutup panel island ke mode pill mengambang |
+| `Drag Navbar` | Geser dan pindahkan posisi island ke sisi layar mana pun (magnet tepi otomatis) |
+
+---
+
+## 📦 Cara Unduh & Instal
+
+1. Kunjungi halaman [Releases Terbaru](https://github.com/yassardaffa1427-ai/widgnot/releases/latest).
+2. Unduh file instalasi:
+   - **`Widgnot Setup x.x.x.exe`** (Installer Windows dengan shortcut desktop dan start menu otomatis)
+   - atau **`Widgnot x.x.x.exe`** (Versi Portable tanpa instalasi)
+3. Jalankan aplikasi — Widgnot akan langsung aktif di layar laptop Anda!
+
+---
+
+## 🛠️ Pengembangan Lokal
 
 ```bash
+# Clone repositori
+git clone https://github.com/yassardaffa1427-ai/widgnot.git
+cd widgnot
+
+# Install dependencies
 npm install
-npm run dev        # http://localhost:5173
-npm run build      # typecheck + build produksi
+
+# Jalankan dalam mode desktop development (Vite + Electron)
+npm run electron:dev
+
+# Build installer Windows .exe
+npm run build:exe
 ```
 
-Pintasan: `Alt+W` buka/tutup · `Esc` tutup · tarik navbar/pill untuk memindahkan.
+---
 
-## Stack
+## 🎨 Desain
 
-| Kebutuhan | Pilihan |
-| --- | --- |
-| Framework | React 18 + TypeScript + Vite |
-| Animasi | `motion` (Framer Motion) — spring, drag, AnimatePresence |
-| State | `zustand` (+ `persist` ke localStorage) |
-| Styling | CSS biasa + design tokens (`src/styles/tokens.css`) |
-| Font | Inter Tight via `@fontsource` (offline-friendly) |
+Desain antarmuka dibuat berdasarkan spesifikasi Figma **`widgnot`** (`FrgTIuGpf3fpWDsiTTJOK1`).
+- Icon resmi aplikasi: Node Figma `36:1126`
+- Token warna, font Inter Tight, dan spring motion: `src/styles/tokens.css` & `src/lib/motion.ts`.
 
-## Struktur
+---
 
-```
-src/
-  components/
-    island/     Island (drag, dock, spring), Navbar, Pager, IdlePill
-    widgets/    Music, Note, Calendar, Timer, Todo
-    ui/         Icons, Ring, EqBars, BatteryRing, ActivityRow, AddActivityForm
-  store/        ui (halaman/open), data (notes+activities), timer, music
-  lib/          motion.ts (konfigurasi spring), date.ts, hooks.ts
-  styles/       tokens.css, global.css, island.css
-docs/           ARCHITECTURE.md, FIGMA_MAP.md, ROADMAP.md
-.agent/         rules + workflows untuk Antigravity
-AGENTS.md       konteks proyek untuk agent
-```
-
-## Mengadaptasi di Antigravity IDE
-
-1. **File → Open Folder** → pilih folder `widgnot`.
-2. Jalankan `npm install && npm run dev` di terminal terintegrasi.
-3. `AGENTS.md` dan `.agent/` berisi konteks, aturan kode, dan workflow verifikasi untuk agent.
-   Jika versi Antigravity kamu memakai lokasi konfigurasi berbeda, salin isinya ke sana.
-4. Prompt awal yang disarankan:
-   > Baca `AGENTS.md` dan `docs/ARCHITECTURE.md`. Lalu kerjakan item pertama di `docs/ROADMAP.md`.
-   > Jalankan workflow `/verify` sebelum selesai.
-
-## Setel animasi
-
-Semua angka "feel" ada di `src/lib/motion.ts`:
-
-- `islandSpring` — ukuran island (stiffness 300, damping 26 → sedikit overshoot = liquid)
-- `snapSpring` — snap ke tepi setelah drag
-- `contentSpring` — transisi isi halaman
-
-Naikkan `damping` untuk gerak lebih kaku, turunkan untuk lebih "jelly".
+<p align="center">
+  Dibuat dengan ❤️ oleh <a href="https://github.com/yassardaffa1427-ai">yassardaffa1427-ai</a>
+</p>

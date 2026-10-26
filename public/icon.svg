@@ -1,0 +1,73 @@
+<svg width="512" height="512" viewBox="0 0 165 165" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="82.5" y1="0" x2="82.5" y2="165" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2a2a2a" />
+      <stop offset="100%" stop-color="#141414" />
+    </linearGradient>
+
+    <!-- Outer Border Metallic Gradient -->
+    <linearGradient id="borderGrad" x1="0" y1="0" x2="165" y2="165" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#d0d0d0" />
+      <stop offset="50%" stop-color="#8a8a8a" />
+      <stop offset="100%" stop-color="#555555" />
+    </linearGradient>
+
+    <!-- Creature Gradient: Cyan-Blue to White -->
+    <linearGradient id="creatureGrad" x1="46.678" y1="0" x2="46.678" y2="77.797" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0088ff" />
+      <stop offset="55%" stop-color="#4db3ff" />
+      <stop offset="100%" stop-color="#ffffff" />
+    </linearGradient>
+
+    <!-- Bottom Ambient Blue Glow Filter -->
+    <filter id="glowBlue" x="-40" y="20" width="245" height="180" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="22" result="blur" />
+    </filter>
+
+    <!-- Bottom Ambient White Glow Filter -->
+    <filter id="glowWhite" x="-30" y="50" width="225" height="160" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="20" result="blur" />
+    </filter>
+
+    <!-- Clip Path for the Icon Squircle -->
+    <clipPath id="squircleClip">
+      <rect x="2" y="2" width="161" height="161" rx="39" />
+    </clipPath>
+  </defs>
+
+  <!-- Outer Squircle with Clip -->
+  <g clip-path="url(#squircleClip)">
+    <!-- Base Dark Background -->
+    <rect width="165" height="165" fill="url(#bgGrad)" />
+
+    <!-- Ambient Bottom Blue Aura -->
+    <path d="M82.5 75C55 58 28 85 27 85V145H138V72C122 112 85 92 82.5 75Z" fill="#1e88e5" opacity="0.85" filter="url(#glowBlue)" />
+    <!-- Ambient Bottom White Rim Aura -->
+    <path d="M82.5 105C55 90 28 115 27 115V165H138V102C122 138 85 120 82.5 105Z" fill="#ffffff" opacity="0.6" filter="url(#glowWhite)" />
+
+    <!-- Eyebrows -->
+    <!-- Left Eyebrow -->
+    <g transform="translate(67.53, 36.55) rotate(-97.75) translate(-3.112, -10.89)">
+      <rect width="6.224" height="21.783" rx="3.112" fill="#ffffff" />
+    </g>
+    <!-- Right Eyebrow -->
+    <g transform="translate(98.65, 37.03) rotate(-84.16) translate(-3.112, -10.89)">
+      <rect width="6.224" height="21.783" rx="3.112" fill="#ffffff" />
+    </g>
+
+    <!-- Creature Head/Body (Squircle Pill) -->
+    <g transform="translate(36.09, 50.57)">
+      <rect width="93.356" height="77.797" rx="34.23" fill="url(#creatureGrad)" />
+    </g>
+
+    <!-- Creature Eyes (White Rounded Vertical Pills) -->
+    <!-- Left Eye -->
+    <rect x="67.21" y="70.8" width="9.336" height="21.783" rx="4.668" fill="#ffffff" />
+    <!-- Right Eye -->
+    <rect x="92.11" y="70.8" width="9.336" height="21.783" rx="4.668" fill="#ffffff" />
+  </g>
+
+  <!-- Metallic Outer Border Ring -->
+  <rect x="2" y="2" width="161" height="161" rx="39" stroke="url(#borderGrad)" stroke-width="3.5" fill="none" />
+</svg>
