@@ -73,20 +73,41 @@ function createWindow() {
   });
 }
 
+const fs = require('fs');
+
+function getScriptPath() {
+  const targetPath = path.join(app.getPath('userData'), 'get-media.ps1');
+  try {
+    const bundledScriptPath = path.join(__dirname, 'get-media.ps1');
+    if (fs.existsSync(bundledScriptPath)) {
+      const content = fs.readFileSync(bundledScriptPath, 'utf8');
+      fs.writeFileSync(targetPath, content, 'utf8');
+      return targetPath;
+    }
+  } catch (err) {
+    console.error('Failed to copy get-media.ps1:', err);
+  }
+  return targetPath;
+}
+
 // Background media tracking for Spotify, YouTube, and other laptop players
 function startMediaTracking() {
   if (process.platform !== 'win32') return;
 
-  const scriptPath = path.join(__dirname, 'get-media.ps1');
+  const scriptPath = getScriptPath();
+  let isPolling = false;
 
   const pollMedia = () => {
+    if (isPolling) return;
     if (!mainWindow || mainWindow.isDestroyed()) return;
+    isPolling = true;
 
     execFile(
       'powershell.exe',
       ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', scriptPath],
-      { windowsHide: true, timeout: 2000 },
+      { windowsHide: true, timeout: 3500 },
       (err, stdout) => {
+        isPolling = false;
         if (!err && stdout && mainWindow && !mainWindow.isDestroyed()) {
           try {
             const data = JSON.parse(stdout.trim());

@@ -1,7 +1,7 @@
 {
   "name": "widgnot",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -19,6 +19,9 @@
     "appId": "com.widgnot.app",
     "productName": "Widgnot",
     "compression": "normal",
+    "asarUnpack": [
+      "electron/*.ps1"
+    ],
     "directories": {
       "output": "release"
     },

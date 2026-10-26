@@ -89,7 +89,7 @@ export function MusicWidget() {
 
             {/* Play controls */}
             <div className="music__ctrl" style={{ gap: 24, marginTop: -4 }}>
-              <button className="icon-btn" onClick={() => m.connectSource('youtube')} aria-label="Sebelumnya" style={{ color: 'rgba(255,255,255,0.7)' }}>
+              <button className="icon-btn" onClick={m.prev} aria-label="Sebelumnya" style={{ color: 'rgba(255,255,255,0.7)' }}>
                 <Skip dir="prev" size={24} />
               </button>
               <button
@@ -106,50 +106,37 @@ export function MusicWidget() {
               >
                 <Play size={22} />
               </button>
-              <button className="icon-btn" onClick={() => m.connectSource('spotify')} aria-label="Berikutnya" style={{ color: 'rgba(255,255,255,0.7)' }}>
+              <button className="icon-btn" onClick={m.next} aria-label="Berikutnya" style={{ color: 'rgba(255,255,255,0.7)' }}>
                 <Skip size={24} />
               </button>
             </div>
 
-            {/* Streaming detect badges (YouTube & Spotify) */}
+            {/* Live detection info badge */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, paddingTop: 4 }}>
-              <button
-                className="chip"
-                onClick={() => m.connectSource('youtube')}
+              <div
                 style={{
-                  display: 'flex',
+                  display: 'inline-flex',
                   alignItems: 'center',
-                  gap: 6,
+                  gap: 8,
                   fontSize: 12,
-                  background: 'rgba(255, 0, 0, 0.15)',
-                  color: '#ff4d4d',
-                  border: '1px solid rgba(255, 0, 0, 0.25)',
-                  padding: '4px 10px',
+                  color: 'rgba(255, 255, 255, 0.65)',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  padding: '4px 12px',
                   borderRadius: 20,
                 }}
               >
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ff3333' }} />
-                YouTube Audio
-              </button>
-
-              <button
-                className="chip"
-                onClick={() => m.connectSource('spotify')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  fontSize: 12,
-                  background: 'rgba(29, 185, 84, 0.15)',
-                  color: '#1db954',
-                  border: '1px solid rgba(29, 185, 84, 0.25)',
-                  padding: '4px 10px',
-                  borderRadius: 20,
-                }}
-              >
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#1db954' }} />
-                Spotify
-              </button>
+                <span
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: '50%',
+                    background: '#1db954',
+                    boxShadow: '0 0 6px #1db954',
+                  }}
+                />
+                <span>Otomatis sinkron YouTube &amp; Spotify</span>
+              </div>
             </div>
           </motion.div>
         ) : (

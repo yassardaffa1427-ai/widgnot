@@ -37,26 +37,7 @@ interface MusicState {
   handleOSMedia: (payload: OSMediaData) => void;
 }
 
-const STREAMING_TRACKS: Record<'spotify' | 'youtube', Track> = {
-  spotify: {
-    id: 'spotify-1',
-    name: 'Cruel Summer',
-    artist: 'Taylor Swift · Spotify',
-    duration: 178,
-    coverGradient: 'linear-gradient(135deg, #1DB954 0%, #121212 90%)',
-    source: 'spotify',
-  },
-  youtube: {
-    id: 'youtube-1',
-    name: 'Original Deep Dive',
-    artist: 'Hajime Ch. 轟はじめ - ReGLOSS · YouTube',
-    duration: 185,
-    coverGradient: 'linear-gradient(135deg, #ff2a85 0%, #7b1fa2 50%, #1e1035 100%)',
-    source: 'youtube',
-  },
-};
-
-const DEFAULT_TRACKS: Track[] = [STREAMING_TRACKS.youtube, STREAMING_TRACKS.spotify];
+const DEFAULT_TRACKS: Track[] = [];
 
 // Simple ambient audio synth generator using Web Audio API
 class SynthPlayer {
@@ -204,12 +185,10 @@ export const useMusic = create<MusicState>((set, get) => {
     deviceType: 'airpods',
 
     connectSource: (src: 'spotify' | 'youtube') => {
-      const track = STREAMING_TRACKS[src];
-      const idx = get().tracks.findIndex((t) => t.id === track.id);
-      const targetIndex = idx >= 0 ? idx : 0;
-      set({ hasActiveMedia: true, source: src, index: targetIndex, current: 0, duration: track.duration, playing: true });
-      synth.play();
-      startTicker();
+      if (window.electronAPI?.toggleOSMedia) {
+        window.electronAPI.toggleOSMedia();
+      }
+      set({ hasActiveMedia: true, source: src, playing: true });
     },
 
     disconnectMedia: () => {
@@ -237,17 +216,13 @@ export const useMusic = create<MusicState>((set, get) => {
 
     toggle: () => {
       const s = get();
-      if (s.isOSMedia && window.electronAPI?.toggleOSMedia) {
+      if (window.electronAPI?.toggleOSMedia) {
         window.electronAPI.toggleOSMedia();
         set({ playing: !s.playing });
         return;
       }
 
-      if (!s.hasActiveMedia) {
-        // Starts detected stream from YouTube/Spotify
-        get().connectSource('youtube');
-        return;
-      }
+      if (!s.hasActiveMedia) return;
 
       const t = s.tracks[s.index];
       if (!t) return;
@@ -266,24 +241,19 @@ export const useMusic = create<MusicState>((set, get) => {
     },
 
     next: () => {
-      const s = get();
-      if (s.isOSMedia && window.electronAPI?.nextOSMedia) {
+      if (window.electronAPI?.nextOSMedia) {
         window.electronAPI.nextOSMedia();
         return;
       }
 
-      if (!get().hasActiveMedia) {
-        get().connectSource('youtube');
-        return;
-      }
+      if (!get().hasActiveMedia) return;
       const { index, tracks, playing } = get();
       const nextIdx = (index + 1) % tracks.length;
       load(nextIdx, playing);
     },
 
     prev: () => {
-      const s = get();
-      if (s.isOSMedia && window.electronAPI?.prevOSMedia) {
+      if (window.electronAPI?.prevOSMedia) {
         window.electronAPI.prevOSMedia();
         return;
       }
@@ -333,18 +303,22 @@ export const useMusic = create<MusicState>((set, get) => {
 
     handleOSMedia: (payload: OSMediaData) => {
       if (payload.hasMedia && payload.title) {
-        const isSpotify = (payload.appId || '').toLowerCase().includes('spotify');
+        const isSpotify = (payload.appId || payload.source || '').toLowerCase().includes('spotify') ||
+                          (payload.artist || '').toLowerCase().includes('spotify');
         const trackSource = isSpotify ? 'spotify' : 'youtube';
         const osTrack: Track = {
-          id: 'os-active-media',
+          id: `os-${payload.title}`,
           name: payload.title,
-          artist: payload.artist || (isSpotify ? 'Spotify' : 'Laptop Media'),
+          artist: payload.artist || (isSpotify ? 'Spotify' : 'YouTube'),
           duration: payload.duration || 180,
           source: trackSource,
           coverGradient: isSpotify
             ? 'linear-gradient(135deg, #1DB954 0%, #121212 90%)'
             : 'linear-gradient(135deg, #ff2a85 0%, #7b1fa2 50%, #1e1035 100%)',
         };
+
+        const currentTrack = get().tracks[get().index];
+        const isSameTrack = currentTrack && currentTrack.name === osTrack.name;
 
         set({
           hasActiveMedia: true,
@@ -353,7 +327,7 @@ export const useMusic = create<MusicState>((set, get) => {
           tracks: [osTrack],
           index: 0,
           playing: Boolean(payload.playing),
-          current: payload.position || 0,
+          current: payload.position !== undefined && payload.position > 0 ? payload.position : (isSameTrack ? get().current : 0),
           duration: payload.duration || 180,
         });
       } else {

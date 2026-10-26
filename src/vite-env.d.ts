@@ -10,6 +10,7 @@ interface OSMediaData {
   playing?: boolean;
   position?: number;
   duration?: number;
+  source?: 'spotify' | 'youtube' | string;
 }
 
 interface Window {
