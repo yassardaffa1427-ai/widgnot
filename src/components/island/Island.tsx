@@ -4,6 +4,7 @@ import {
 } from 'motion/react';
 import { useUI, type PageId } from '@/store/ui';
 import { useData } from '@/store/data';
+import { useTimer } from '@/store/timer';
 import { useViewport } from '@/lib/hooks';
 import { contentSpring, instant, islandSpring, snapSpring } from '@/lib/motion';
 import { Navbar } from './Navbar';
@@ -172,7 +173,11 @@ export function Island() {
                   onPointerDown={(e) => { dragged.current = false; controls.start(e); }}
                   onClick={() => {
                     if (!dragged.current) {
-                      goTo('music');
+                      if (useTimer.getState().running) {
+                        goTo('timer');
+                      } else {
+                        goTo('music');
+                      }
                       setOpen(true);
                     }
                   }}
