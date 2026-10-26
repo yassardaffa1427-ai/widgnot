@@ -1,0 +1,60 @@
+@import './tokens.css';
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body {
+  font-family: var(--font);
+  color: var(--text);
+  background: #0b0b0f;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; outline: none; }
+button:focus:not(:focus-visible) { outline: none; }
+input, textarea, select { font: inherit; color: inherit; outline: none; }
+input:focus, textarea:focus, select:focus { outline: none; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+/* ---------- Electron Desktop Overlay Mode ---------- */
+html.is-electron,
+html.is-electron body,
+html.is-electron #root {
+  background: transparent !important;
+  background-color: transparent !important;
+  overflow: hidden;
+}
+
+.desktop-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: transparent !important;
+  pointer-events: none;
+}
+
+.desktop-overlay .dock,
+.desktop-overlay .island,
+.desktop-overlay .pill,
+.desktop-overlay .panel {
+  pointer-events: auto;
+}
+
+/* ---------- demo backdrop (hanya untuk preview) ---------- */
+.demo {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(900px 500px at 20% 10%, rgba(0, 136, 255, 0.28), transparent 60%),
+    radial-gradient(800px 500px at 90% 90%, rgba(254, 45, 40, 0.22), transparent 60%),
+    #0b0b0f;
+  text-align: center;
+  padding: 24px;
+}
+.demo h1 { margin: 0 0 8px; font-size: 40px; letter-spacing: -0.02em; }
+.demo p { margin: 0; color: var(--muted); max-width: 46ch; line-height: 1.5; }
+.demo kbd {
+  background: var(--surface-2); border-radius: 6px; padding: 2px 6px; font: inherit; font-size: 13px;
+}

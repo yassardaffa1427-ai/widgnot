@@ -1,0 +1,25 @@
+/* Design tokens — diambil dari Figma "widgnot" (frame `all`, node 5:2939) */
+:root {
+  --bg: #1b1b1b;          /* island */
+  --surface: #242424;     /* kartu todo / baris */
+  --surface-2: #3d3d3d;   /* tombol, chip */
+  --dot: #585858;         /* page dot nonaktif */
+  --text: #ffffff;
+  --muted: #999999;
+  --faint: rgba(255, 255, 255, 0.35);
+  --blue: #0088ff;        /* tanggal terpilih, badge */
+  --red: #ff2121;         /* weekend */
+  --rec: #fe2d28;         /* timer / play */
+  --green: #21ff54;       /* baterai, todo selesai */
+  --green-soft: rgba(33, 255, 84, 0.2);
+
+  --radius-island: 34px;
+  --radius-card: 10px;
+  --radius-chip: 20px;
+
+  --island-idle: 84px;
+  --island-w: 416px;
+  --island-w-wide: 584px;
+
+  --font: 'Inter Tight', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
