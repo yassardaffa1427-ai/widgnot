@@ -53,25 +53,62 @@ public class WinThumbHelper {
     })[0]
 
     function Invoke-WinRTAsync($winRtTask, $resultType) {
-        $asTask = $asTaskGeneric.MakeGenericMethod($resultType)
-        $netTask = $asTask.Invoke($null, @($winRtTask))
-        $netTask.Wait(800) | Out-Null
-        return $netTask.Result
+        if ($null -eq $winRtTask) { return $null }
+        try {
+            $asTask = $asTaskGeneric.MakeGenericMethod($resultType)
+            $netTask = $asTask.Invoke($null, @($winRtTask))
+            if ($netTask.Wait(1200)) {
+                return $netTask.Result
+            }
+        } catch {}
+        return $null
     }
 
     $mgrAsync = [Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager]::RequestAsync()
     $mgr = Invoke-WinRTAsync $mgrAsync ([Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager])
 
     if ($mgr) {
-        $sessions = @($mgr.GetSessions())
-        foreach ($s in $sessions) {
-            $app = $s.SourceAppUserModelId
-            if ($app -match 'RiotGames|League|Valorant|Discord|Steam') { continue }
+        $curSession = $null
+        try { $curSession = $mgr.GetCurrentSession() } catch {}
+
+        $rawSessions = @()
+        try { $rawSessions = @($mgr.GetSessions()) } catch {}
+
+        # Filter out gaming/unrelated apps
+        $sessions = @($rawSessions | Where-Object { 
+            try {
+                $_.SourceAppUserModelId -notmatch 'RiotGames|League|Valorant|Discord|Steam'
+            } catch { $false }
+        })
+
+        # Sort so Playing sessions come first, then current active session, then Paused
+        $sortedSessions = @($sessions | Sort-Object -Descending {
+            try {
+                $pb = $_.GetPlaybackInfo()
+                if ($pb -and $pb.PlaybackStatus.ToString() -eq 'Playing') { return 100 }
+                if ($curSession -and $_.SourceAppUserModelId -eq $curSession.SourceAppUserModelId) { return 50 }
+                if ($pb -and $pb.PlaybackStatus.ToString() -eq 'Paused') { return 10 }
+                return 0
+            } catch { return 0 }
+        })
+
+        foreach ($s in $sortedSessions) {
+            $app = ""
+            try { $app = $s.SourceAppUserModelId } catch {}
 
             $p = Invoke-WinRTAsync ($s.TryGetMediaPropertiesAsync()) ([Windows.Media.Control.GlobalSystemMediaTransportControlsSessionMediaProperties])
             if ($p -and ($p.Title -ne '' -or $p.Artist -ne '')) {
-                $status = $s.GetPlaybackInfo().PlaybackStatus.ToString()
-                $timeline = $s.GetTimelineProperties()
+                $status = "Unknown"
+                try {
+                    $pbInfo = $s.GetPlaybackInfo()
+                    if ($pbInfo) { $status = $pbInfo.PlaybackStatus.ToString() }
+                } catch {}
+
+                $timeline = $null
+                try {
+                    $timeline = $s.GetTimelineProperties()
+                } catch {}
+
                 $pos = if ($timeline) { [int]$timeline.Position.TotalSeconds } else { 0 }
                 $dur = if ($timeline -and $timeline.EndTime.TotalSeconds -gt 0) { [int]$timeline.EndTime.TotalSeconds } else { 180 }
                 $isSpot = ($app -match 'spotify')
@@ -88,11 +125,11 @@ public class WinThumbHelper {
 
                 $rawTitle = $p.Title
                 $rawArtist = if ($p.Artist) { $p.Artist } else { if ($isSpot) { "Spotify" } else { "YouTube" } }
-                if ($rawTitle -match '^(.*?)\s*[-–—]\s*(.*?)$') {
+                if ($rawTitle -match '^(.*?)\s*[-\u2013\u2014]\s*(.*?)$') {
                     $rawArtist = $matches[1].Trim()
                     $rawTitle = $matches[2].Trim()
                 }
-                $rawTitle = $rawTitle -replace '[【】]', ''
+                $rawTitle = $rawTitle -replace '[\u3010\u3011]', ''
                 $rawTitle = $rawTitle -replace '\s*[\(\[](?:Official\s*(?:Music\s*|Lyric\s*)?Video|Official\s*Audio|Lyric\s*Video|Full\s*Lyrics?|Audio|Visualizer|Music\s*Video|MV|HD|4K|Remastered|Live\s*Session|Audio\s*Video).*?[\)\]]', ''
                 $rawTitle = $rawTitle -replace '\s+(?:Official\s*(?:Music\s*|Lyric\s*)?Video|Official\s*Audio|Official\s*MV|MV|Music\s*Video)\s*$', ''
                 $rawTitle = $rawTitle.Trim()
@@ -126,13 +163,13 @@ try {
 
     if ($spotProc) {
         $sTitle = $spotProc.MainWindowTitle
-        if ($sTitle -match '^(.*?)\s*[-–—]\s*(.*?)$') {
+        if ($sTitle -match '^(.*?)\s*[-\u2013\u2014]\s*(.*?)$') {
             $art = $matches[1].Trim()
             $trk = $matches[2].Trim()
             [PSCustomObject]@{
                 hasMedia = $true
                 title = $trk
-                artist = "$art · Spotify"
+                artist = "$art - Spotify"
                 album = "Spotify"
                 appId = "Spotify"
                 status = "Playing"
@@ -203,11 +240,11 @@ public class WinMediaDetector {
     $wTitles = [WinMediaDetector]::FindWindowTitles()
 
     foreach ($w in $wTitles) {
-        # Check YouTube tab: "Song Name - YouTube - Opera" or "Song Name - YouTube"
-        if ($w -match '^(.*?)\s*-\s*YouTube(?:\s*-\s*.*)?$') {
+        # Check YouTube tab: Opera, Chrome, Edge, Brave, Firefox, YouTube Music
+        if ($w -match '^(.*?)\s*[-\u2013\u2014]\s*YouTube(?:\s*Music)?(?:\s+and\s+\d+\s+more\s+pages)?(?:\s*[-\u2013\u2014]\s*.*)?$') {
             $raw = $matches[1].Trim()
             $raw = $raw -replace '^\(\d+\)\s*', ''
-            $raw = $raw -replace '^[▶►]\s*', ''
+            $raw = $raw -replace '^[\u25B6\u25BA]\s*', ''
 
             if ($raw.Length -gt 1 -and $raw -notmatch '^(?:YouTube|Home|Subscriptions|Trending|Library|History|Watch later)$') {
                 # Clean video suffixes
@@ -218,7 +255,7 @@ public class WinMediaDetector {
                 $trackTitle = $clean
                 $trackArtist = "YouTube"
 
-                if ($clean -match '^(.*?)\s*[-–—]\s*(.*?)$') {
+                if ($clean -match '^(.*?)\s*[-\u2013\u2014]\s*(.*?)$') {
                     $trackArtist = $matches[1].Trim()
                     $trackTitle = $matches[2].Trim()
                 }

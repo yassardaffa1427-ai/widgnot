@@ -6,6 +6,9 @@ import '@fontsource/inter-tight/700.css';
 import './styles/global.css';
 import './styles/island.css';
 import App from './App';
+import { initTauriBridge } from './lib/tauri-bridge';
+
+initTauriBridge();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

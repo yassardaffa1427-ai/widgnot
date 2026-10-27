@@ -449,6 +449,12 @@ export const useMusic = create<MusicState>((set, get) => {
           duration: payload.duration || 180,
         });
 
+        if (payload.playing) {
+          startTicker();
+        } else {
+          stopTicker();
+        }
+
         // If no thumbnail yet, fetch from iTunes Search API in background
         if (!thumb) {
           void fetchArtwork(cleanTitle, cleanArtist).then((art) => {
@@ -465,6 +471,7 @@ export const useMusic = create<MusicState>((set, get) => {
       } else {
         const s = get();
         if (s.isOSMedia) {
+          stopTicker();
           set({
             hasActiveMedia: false,
             isOSMedia: false,

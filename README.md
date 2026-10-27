@@ -11,12 +11,12 @@
 
 <p align="center">
   <a href="https://github.com/yassardaffa1427-ai/widgnot/releases/latest">
-    <img src="https://img.shields.io/github/v/release/yassardaffa1427-ai/widgnot?style=for-the-badge&color=0088ff&label=Download%20Installer" alt="Download Windows Installer" />
+    <img src="https://img.shields.io/github/v/release/yassardaffa1427-ai/widgnot?style=for-the-badge&color=0088ff&label=Download%20Installer%20(2.9%20MB)" alt="Download Windows Installer" />
   </a>
   <img src="https://img.shields.io/badge/Platform-Windows-0078d7?style=for-the-badge&logo=windows&logoColor=white" alt="Windows" />
-  <img src="https://img.shields.io/badge/Framework-React%2018%20%2B%20TypeScript-3178c6?style=for-the-badge&logo=typescript&logoColor=white" alt="React + TS" />
-  <img src="https://img.shields.io/badge/Engine-Electron-47848f?style=for-the-badge&logo=electron&logoColor=white" alt="Electron" />
-  <img src="https://img.shields.io/badge/License-MIT-10b981?style=for-the-badge" alt="License" />
+  <img src="https://img.shields.io/badge/Engine-Tauri%20v2%20(Rust)-ffc131?style=for-the-badge&logo=tauri&logoColor=black" alt="Tauri v2" />
+  <img src="https://img.shields.io/badge/RAM-~30MB-10b981?style=for-the-badge" alt="RAM" />
+  <img src="https://img.shields.io/badge/Size-2.9MB-success?style=for-the-badge" alt="Size" />
 </p>
 
 ---
@@ -54,7 +54,7 @@
 ---
 
 ## 🛠️ Pengembangan Lokal
-
+ 
 ```bash
 # Clone repositori
 git clone https://github.com/yassardaffa1427-ai/widgnot.git
@@ -63,11 +63,11 @@ cd widgnot
 # Install dependencies
 npm install
 
-# Jalankan dalam mode desktop development (Vite + Electron)
-npm run electron:dev
+# Jalankan dalam mode desktop development (Vite + Tauri)
+npm run tauri:dev
 
-# Build installer Windows .exe
-npm run build:exe
+# Build installer Windows .exe (hanya 2.9 MB)
+npm run tauri:build
 ```
 
 ---

@@ -93,14 +93,18 @@ function createWindow() {
 const fs = require('fs');
 
 function getScriptPath() {
+  let bundledScriptPath = path.join(__dirname, 'get-media.ps1');
+  if (!fs.existsSync(bundledScriptPath) && process.resourcesPath) {
+    const unpacked = path.join(process.resourcesPath, 'app.asar.unpacked', 'electron', 'get-media.ps1');
+    if (fs.existsSync(unpacked)) bundledScriptPath = unpacked;
+  }
+  if (!app.isPackaged && fs.existsSync(bundledScriptPath)) {
+    return bundledScriptPath;
+  }
   const targetPath = path.join(app.getPath('userData'), 'get-media.ps1');
   try {
-    let bundledScriptPath = path.join(__dirname, 'get-media.ps1');
-    if (!fs.existsSync(bundledScriptPath) && process.resourcesPath) {
-      const unpacked = path.join(process.resourcesPath, 'app.asar.unpacked', 'electron', 'get-media.ps1');
-      if (fs.existsSync(unpacked)) bundledScriptPath = unpacked;
-    }
     if (fs.existsSync(bundledScriptPath)) {
+      fs.mkdirSync(path.dirname(targetPath), { recursive: true });
       const content = fs.readFileSync(bundledScriptPath, 'utf8');
       fs.writeFileSync(targetPath, content, 'utf8');
       return targetPath;
@@ -108,18 +112,22 @@ function getScriptPath() {
   } catch (err) {
     console.error('Failed to copy get-media.ps1:', err);
   }
-  return targetPath;
+  return fs.existsSync(targetPath) ? targetPath : bundledScriptPath;
 }
 
 function getBluetoothScriptPath() {
+  let bundledScriptPath = path.join(__dirname, 'bluetooth.ps1');
+  if (!fs.existsSync(bundledScriptPath) && process.resourcesPath) {
+    const unpacked = path.join(process.resourcesPath, 'app.asar.unpacked', 'electron', 'bluetooth.ps1');
+    if (fs.existsSync(unpacked)) bundledScriptPath = unpacked;
+  }
+  if (!app.isPackaged && fs.existsSync(bundledScriptPath)) {
+    return bundledScriptPath;
+  }
   const targetPath = path.join(app.getPath('userData'), 'bluetooth.ps1');
   try {
-    let bundledScriptPath = path.join(__dirname, 'bluetooth.ps1');
-    if (!fs.existsSync(bundledScriptPath) && process.resourcesPath) {
-      const unpacked = path.join(process.resourcesPath, 'app.asar.unpacked', 'electron', 'bluetooth.ps1');
-      if (fs.existsSync(unpacked)) bundledScriptPath = unpacked;
-    }
     if (fs.existsSync(bundledScriptPath)) {
+      fs.mkdirSync(path.dirname(targetPath), { recursive: true });
       const content = fs.readFileSync(bundledScriptPath, 'utf8');
       fs.writeFileSync(targetPath, content, 'utf8');
       return targetPath;
@@ -127,7 +135,7 @@ function getBluetoothScriptPath() {
   } catch (err) {
     console.error('Failed to copy bluetooth.ps1:', err);
   }
-  return targetPath;
+  return fs.existsSync(targetPath) ? targetPath : bundledScriptPath;
 }
 
 function runBluetoothCommand(action = 'status') {
@@ -139,12 +147,17 @@ function runBluetoothCommand(action = 'status') {
     execFile(
       'powershell.exe',
       ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', scriptPath, '-Action', action],
-      { windowsHide: true, timeout: 4000 },
+      { windowsHide: true, timeout: 5000 },
       (err, stdout) => {
         if (!err && stdout) {
           try {
-            const data = JSON.parse(stdout.trim());
-            return resolve(data);
+            const str = stdout.trim();
+            const start = str.indexOf('{');
+            const end = str.lastIndexOf('}');
+            if (start !== -1 && end > start) {
+              const data = JSON.parse(str.slice(start, end + 1));
+              return resolve(data);
+            }
           } catch {}
         }
         resolve({ enabled: false, connected: false, deviceName: '' });
@@ -169,13 +182,18 @@ function startMediaTracking() {
     execFile(
       'powershell.exe',
       ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', scriptPath],
-      { windowsHide: true, timeout: 3500, maxBuffer: 10 * 1024 * 1024 },
+      { windowsHide: true, timeout: 5000, maxBuffer: 10 * 1024 * 1024 },
       (err, stdout) => {
         isPolling = false;
         if (!err && stdout && mainWindow && !mainWindow.isDestroyed()) {
           try {
-            const data = JSON.parse(stdout.trim());
-            mainWindow.webContents.send('os-media-update', data);
+            const str = stdout.trim();
+            const start = str.indexOf('{');
+            const end = str.lastIndexOf('}');
+            if (start !== -1 && end > start) {
+              const data = JSON.parse(str.slice(start, end + 1));
+              mainWindow.webContents.send('os-media-update', data);
+            }
           } catch {
             // ignore non-json
           }
