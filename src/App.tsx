@@ -46,6 +46,19 @@ export default function App() {
     return unsub;
   }, []);
 
+  // Listener status Bluetooth laptop dari Electron
+  useEffect(() => {
+    if (!window.electronAPI) return;
+    window.electronAPI.getBluetoothStatus?.().then((data) => {
+      if (data) useMusic.getState().handleBluetoothUpdate(data);
+    });
+    if (!window.electronAPI.onBluetoothUpdate) return;
+    const unsub = window.electronAPI.onBluetoothUpdate((data) => {
+      useMusic.getState().handleBluetoothUpdate(data);
+    });
+    return unsub;
+  }, []);
+
   if (isElectron) {
     return (
       <div className="desktop-overlay">

@@ -1,3 +1,6 @@
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
+
 try {
     # 1. Try Windows GSMTC (Spotify desktop, Chrome, Edge, media players)
     [Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager, Windows.Media.Control, ContentType=WindowsRuntime] | Out-Null
@@ -89,7 +92,9 @@ public class WinThumbHelper {
                     $rawArtist = $matches[1].Trim()
                     $rawTitle = $matches[2].Trim()
                 }
+                $rawTitle = $rawTitle -replace '[【】]', ''
                 $rawTitle = $rawTitle -replace '\s*[\(\[](?:Official\s*(?:Music\s*|Lyric\s*)?Video|Official\s*Audio|Lyric\s*Video|Full\s*Lyrics?|Audio|Visualizer|Music\s*Video|MV|HD|4K|Remastered|Live\s*Session|Audio\s*Video).*?[\)\]]', ''
+                $rawTitle = $rawTitle -replace '\s+(?:Official\s*(?:Music\s*|Lyric\s*)?Video|Official\s*Audio|Official\s*MV|MV|Music\s*Video)\s*$', ''
                 $rawTitle = $rawTitle.Trim()
 
                 [PSCustomObject]@{

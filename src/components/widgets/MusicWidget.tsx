@@ -53,25 +53,29 @@ export function MusicWidget() {
                 <span style={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.7)' }}>name producer</span>
               </div>
 
-              {/* Bluetooth / Earbuds Button (inactive dark state in Figma 5:2933 / 26:3261) */}
-              <button
+              {/* Bluetooth / Earbuds Button (Figma 5:2933) */}
+              <motion.button
                 className="icon-btn"
-                onClick={m.toggleDevice}
-                aria-label={`Earbuds: ${m.btName}`}
-                title="Bluetooth Earbuds"
+                whileTap={{ scale: 0.92 }}
+                onClick={m.toggleBluetooth}
+                aria-label={m.btEnabled ? `Bluetooth Aktif (${m.btName})` : 'Bluetooth Mati'}
+                title={m.btEnabled ? `${m.btName} (Aktif)` : 'Bluetooth Mati'}
                 style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: '100px',
-                  backgroundColor: '#222222',
+                  width: 44,
+                  height: 44,
+                  borderRadius: '50%',
+                  backgroundColor: m.btEnabled ? '#0088ff' : '#222222',
                   color: '#ffffff',
+                  boxShadow: m.btEnabled ? '0 4px 14px rgba(0, 136, 255, 0.45)' : 'none',
                   flex: 'none',
                   display: 'grid',
                   placeItems: 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1)',
                 }}
               >
                 <AirPods size={24} />
-              </button>
+              </motion.button>
             </div>
 
             {/* Empty Track line 00.00 / 00.00 from Figma 5:2933 */}
@@ -199,7 +203,7 @@ export function MusicWidget() {
                 />
               </motion.div>
 
-              <div className="music__meta" style={{ minWidth: 0, flex: 1, paddingRight: 4 }}>
+              <div className="music__meta" style={{ minWidth: 0, flex: 1, paddingRight: 6 }}>
                 <b
                   title={track.name}
                   style={{
@@ -216,53 +220,44 @@ export function MusicWidget() {
                   {track.name}
                 </b>
                 <span
+                  title={track.artist}
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
+                    display: 'block',
                     fontSize: 13,
-                    color: 'rgba(255, 255, 255, 0.65)',
+                    color: 'rgba(255, 255, 255, 0.7)',
                     overflow: 'hidden',
+                    textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
                     marginTop: 3,
                   }}
                 >
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {track.artist}
-                  </span>
-                  {track.source === 'spotify' && (
-                    <span style={{ fontSize: 10, background: '#1db954', color: '#000', fontWeight: 700, padding: '1px 5px', borderRadius: 4, flexShrink: 0 }}>
-                      SPOTIFY
-                    </span>
-                  )}
-                  {track.source === 'youtube' && (
-                    <span style={{ fontSize: 10, background: '#ff3333', color: '#fff', fontWeight: 700, padding: '1px 5px', borderRadius: 4, flexShrink: 0 }}>
-                      YOUTUBE
-                    </span>
-                  )}
+                  {track.artist}
                 </span>
               </div>
 
-              {/* AirPods / Output Device Button (Active Blue) */}
-              <button
+              {/* Real Windows Bluetooth Earbuds Button (Figma Node 5:2927) */}
+              <motion.button
                 className="icon-btn"
-                onClick={m.toggleDevice}
-                aria-label={`Output: ${m.btName}`}
-                title={`Output: ${m.btName}`}
+                whileTap={{ scale: 0.92 }}
+                onClick={m.toggleBluetooth}
+                aria-label={m.btEnabled ? `Bluetooth Aktif (${m.btName}) - Klik untuk mematikan` : 'Bluetooth Nonaktif - Klik untuk menyalakan'}
+                title={m.btEnabled ? `${m.btName} (Aktif - Klik untuk mematikan)` : 'Bluetooth Mati (Klik untuk menyalakan)'}
                 style={{
-                  width: 40,
-                  height: 40,
+                  width: 44,
+                  height: 44,
                   borderRadius: '50%',
-                  backgroundColor: m.deviceType === 'airpods' ? '#0088ff' : '#333336',
+                  backgroundColor: m.btEnabled ? '#0088ff' : '#252528',
                   color: '#ffffff',
-                  boxShadow: m.deviceType === 'airpods' ? '0 0 14px rgba(0, 136, 255, 0.5)' : 'none',
+                  boxShadow: m.btEnabled ? '0 4px 14px rgba(0, 136, 255, 0.45)' : 'none',
                   flex: 'none',
                   display: 'grid',
                   placeItems: 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1)',
                 }}
               >
                 <AirPods size={24} />
-              </button>
+              </motion.button>
             </div>
 
             <div className="music__bar">
@@ -282,7 +277,7 @@ export function MusicWidget() {
               </div>
             </div>
 
-            <div className="music__ctrl" style={{ gap: 22, marginTop: -4 }}>
+            <div className="music__ctrl" style={{ gap: 26, marginTop: -4 }}>
               <button className="icon-btn" onClick={m.prev} aria-label="Sebelumnya">
                 <Skip dir="prev" size={24} />
               </button>
@@ -302,15 +297,6 @@ export function MusicWidget() {
               </button>
               <button className="icon-btn" onClick={m.next} aria-label="Berikutnya">
                 <Skip size={24} />
-              </button>
-
-              <button
-                className="chip"
-                onClick={m.disconnectMedia}
-                title="Hentikan / Kosongkan media"
-                style={{ fontSize: 11, padding: '4px 8px', borderRadius: 6, color: '#aaa' }}
-              >
-                ✕ Off
               </button>
             </div>
           </motion.div>

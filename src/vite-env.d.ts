@@ -14,6 +14,12 @@ interface OSMediaData {
   thumbnail?: string;
 }
 
+interface BluetoothData {
+  enabled: boolean;
+  connected: boolean;
+  deviceName?: string;
+}
+
 interface Window {
   electronAPI?: {
     isElectron?: boolean;
@@ -24,5 +30,8 @@ interface Window {
     toggleOSMedia: () => void;
     nextOSMedia: () => void;
     prevOSMedia: () => void;
+    getBluetoothStatus?: () => Promise<BluetoothData>;
+    toggleBluetooth?: () => Promise<BluetoothData>;
+    onBluetoothUpdate?: (callback: (data: BluetoothData) => void) => () => void;
   };
 }

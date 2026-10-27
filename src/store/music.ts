@@ -23,6 +23,8 @@ interface MusicState {
   current: number;
   duration: number;
   bt: BtStatus;
+  btEnabled: boolean;
+  btConnected: boolean;
   btName: string;
   deviceType: 'speaker' | 'airpods';
   isOSMedia?: boolean;
@@ -33,6 +35,8 @@ interface MusicState {
   seek: (ratio: number) => void;
   pairBluetooth: () => Promise<void>;
   toggleDevice: () => void;
+  toggleBluetooth: () => Promise<void>;
+  handleBluetoothUpdate: (data: BluetoothData) => void;
   connectSource: (src: 'spotify' | 'youtube') => void;
   disconnectMedia: () => void;
   handleOSMedia: (payload: OSMediaData) => void;
@@ -120,8 +124,12 @@ export function parseTrackMeta(rawTitle: string, rawArtist?: string): { title: s
     .replace(/^[▶►]\s*/, '')
     .trim();
 
+  // Bersihkan tanda kurung siku Jepang 【 】
+  t = t.replace(/[【】]/g, '');
+
   // Bersihkan embel-embel umum video/audio YouTube (Official Video, Lyric Video, dll)
   t = t.replace(/\s*[\(\[](?:Official\s*(?:Music\s*|Lyric\s*)?Video|Official\s*Audio|Lyric\s*Video|Full\s*Lyrics?|Audio|Visualizer|Music\s*Video|MV|HD|4K|Remastered|Live\s*Session|Audio\s*Video).*?[\)\]]/gi, '').trim();
+  t = t.replace(/\s+(?:Official\s*(?:Music\s*|Lyric\s*)?Video|Official\s*Audio|Official\s*MV|MV|Music\s*Video)\s*$/gi, '').trim();
   t = t.replace(/\s*(?:\|\||\/\/).*$/, '').trim();
 
   let artist = (rawArtist || '').trim();
@@ -133,6 +141,7 @@ export function parseTrackMeta(rawTitle: string, rawArtist?: string): { title: s
     artist = dashMatch[1].trim();
     title = dashMatch[2].trim();
   }
+  title = title.replace(/[【】]/g, '').trim();
 
   // Bersihkan label channel seperti Official, VEVO, - Topic
   artist = artist
@@ -247,7 +256,9 @@ export const useMusic = create<MusicState>((set, get) => {
     current: 0,
     duration: 0,
     bt: 'connected',
-    btName: 'AirPods Pro',
+    btEnabled: true,
+    btConnected: true,
+    btName: 'Bluetooth',
     deviceType: 'airpods',
 
     connectSource: (src: 'spotify' | 'youtube') => {
@@ -359,11 +370,36 @@ export const useMusic = create<MusicState>((set, get) => {
     },
 
     toggleDevice: () => {
+      void get().toggleBluetooth();
+    },
+
+    handleBluetoothUpdate: (data: BluetoothData) => {
+      set({
+        btEnabled: data.enabled,
+        btConnected: data.connected,
+        btName: data.deviceName || (data.enabled ? 'Bluetooth On' : 'Bluetooth Off'),
+      });
+    },
+
+    toggleBluetooth: async () => {
       const s = get();
-      if (s.deviceType === 'airpods') {
-        set({ deviceType: 'speaker', btName: 'MacBook Speaker' });
-      } else {
-        set({ deviceType: 'airpods', btName: 'AirPods Pro' });
+      const nextEnabled = !s.btEnabled;
+      set({
+        btEnabled: nextEnabled,
+        btName: nextEnabled ? 'Bluetooth On' : 'Bluetooth Off',
+      });
+
+      if (window.electronAPI?.toggleBluetooth) {
+        try {
+          const res = await window.electronAPI.toggleBluetooth();
+          set({
+            btEnabled: res.enabled,
+            btConnected: res.connected,
+            btName: res.deviceName || (res.enabled ? 'Bluetooth On' : 'Bluetooth Off'),
+          });
+        } catch {
+          // ignore
+        }
       }
     },
 

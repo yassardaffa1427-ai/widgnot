@@ -72,6 +72,19 @@ function createWindow() {
     exec('powershell -NoProfile -Command "(New-Object -ComObject Wscript.Shell).SendKeys([char]177)"', { windowsHide: true });
   });
 
+  // Windows Bluetooth control
+  ipcMain.handle('get-bluetooth-status', async () => {
+    return await runBluetoothCommand('status');
+  });
+
+  ipcMain.handle('toggle-bluetooth', async () => {
+    const res = await runBluetoothCommand('toggle');
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('bluetooth-update', res);
+    }
+    return res;
+  });
+
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
@@ -98,12 +111,55 @@ function getScriptPath() {
   return targetPath;
 }
 
-// Background media tracking for Spotify, YouTube, and other laptop players
+function getBluetoothScriptPath() {
+  const targetPath = path.join(app.getPath('userData'), 'bluetooth.ps1');
+  try {
+    let bundledScriptPath = path.join(__dirname, 'bluetooth.ps1');
+    if (!fs.existsSync(bundledScriptPath) && process.resourcesPath) {
+      const unpacked = path.join(process.resourcesPath, 'app.asar.unpacked', 'electron', 'bluetooth.ps1');
+      if (fs.existsSync(unpacked)) bundledScriptPath = unpacked;
+    }
+    if (fs.existsSync(bundledScriptPath)) {
+      const content = fs.readFileSync(bundledScriptPath, 'utf8');
+      fs.writeFileSync(targetPath, content, 'utf8');
+      return targetPath;
+    }
+  } catch (err) {
+    console.error('Failed to copy bluetooth.ps1:', err);
+  }
+  return targetPath;
+}
+
+function runBluetoothCommand(action = 'status') {
+  return new Promise((resolve) => {
+    if (process.platform !== 'win32') {
+      return resolve({ enabled: false, connected: false, deviceName: '' });
+    }
+    const scriptPath = getBluetoothScriptPath();
+    execFile(
+      'powershell.exe',
+      ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', scriptPath, '-Action', action],
+      { windowsHide: true, timeout: 4000 },
+      (err, stdout) => {
+        if (!err && stdout) {
+          try {
+            const data = JSON.parse(stdout.trim());
+            return resolve(data);
+          } catch {}
+        }
+        resolve({ enabled: false, connected: false, deviceName: '' });
+      }
+    );
+  });
+}
+
+// Background media & bluetooth tracking for Spotify, YouTube, and laptop players
 function startMediaTracking() {
   if (process.platform !== 'win32') return;
 
   const scriptPath = getScriptPath();
   let isPolling = false;
+  let tickCount = 0;
 
   const pollMedia = () => {
     if (isPolling) return;
@@ -126,11 +182,27 @@ function startMediaTracking() {
         }
       }
     );
+
+    tickCount++;
+    if (tickCount % 2 === 0) {
+      runBluetoothCommand('status').then((bt) => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('bluetooth-update', bt);
+        }
+      });
+    }
   };
 
-  // Poll every 2 seconds
+  // Poll media every 2 seconds, bluetooth every 4 seconds
   mediaPollTimer = setInterval(pollMedia, 2000);
   setTimeout(pollMedia, 1000);
+  setTimeout(() => {
+    runBluetoothCommand('status').then((bt) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('bluetooth-update', bt);
+      }
+    });
+  }, 1200);
 }
 
 function createTray() {

@@ -17,4 +17,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   toggleOSMedia: () => ipcRenderer.send('toggle-os-media'),
   nextOSMedia: () => ipcRenderer.send('next-os-media'),
   prevOSMedia: () => ipcRenderer.send('prev-os-media'),
+  getBluetoothStatus: () => ipcRenderer.invoke('get-bluetooth-status'),
+  toggleBluetooth: () => ipcRenderer.invoke('toggle-bluetooth'),
+  onBluetoothUpdate: (callback) => {
+    const handler = (_, data) => callback(data);
+    ipcRenderer.on('bluetooth-update', handler);
+    return () => ipcRenderer.removeListener('bluetooth-update', handler);
+  },
 });
