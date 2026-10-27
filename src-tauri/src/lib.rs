@@ -229,11 +229,8 @@ pub fn run() {
                     let _ = main_window.set_position(tauri::Position::Physical(*pos));
                 }
 
-                #[cfg(target_os = "windows")]
-                if let Ok(hwnd) = main_window.hwnd() {
-                    set_window_click_through(hwnd.0 as isize, true);
-                }
-                let _ = main_window.set_ignore_cursor_events(true);
+                // Inisialisasi jendela: jangan set_ignore_cursor_events(true) di awal
+                // agar hover dan klik pada idle pill langsung responsif dan terdeteksi.
             }
 
             // Start background media & bluetooth polling thread

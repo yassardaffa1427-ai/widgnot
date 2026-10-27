@@ -185,9 +185,28 @@ export function Island() {
                   initial={{ opacity: 0, scale: 0.6, filter: 'blur(8px)' }}
                   animate={{ opacity: 1, scale: 1, filter: 'blur(0px)', transition: { ...contentSpring, delay: reduce ? 0 : 0.05 } }}
                   exit={{ opacity: 0, scale: 0.6, filter: 'blur(8px)', transition: { duration: 0.12 } }}
-                  onPointerDown={(e) => { dragged.current = false; controls.start(e); }}
-                  onClick={() => {
+                  onPointerDown={(e) => {
+                    dragged.current = false;
+                    controls.start(e);
+                  }}
+                  onPointerUp={() => {
+                    // Jika tidak bergeser saat pointer dilepas, buka island
                     if (!dragged.current) {
+                      window.electronAPI?.setInteractive(true);
+                      const t = useTimer.getState();
+                      const isTimerActive = t.running || t.remaining < (t.mode === 'focus' ? t.focusSec : t.breakSec);
+                      if (isTimerActive) {
+                        goTo('timer');
+                      } else {
+                        goTo('music');
+                      }
+                      setOpen(true);
+                    }
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (!dragged.current) {
+                      window.electronAPI?.setInteractive(true);
                       const t = useTimer.getState();
                       const isTimerActive = t.running || t.remaining < (t.mode === 'focus' ? t.focusSec : t.breakSec);
                       if (isTimerActive) {

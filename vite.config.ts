@@ -10,7 +10,7 @@ export default defineConfig({
     port: 5173,
     open: false,
     watch: {
-      ignored: ['**/release/**', '**/electron/**'],
+      ignored: ['**/release/**', '**/electron/**', '**/src-tauri/**'],
     },
   },
 });
