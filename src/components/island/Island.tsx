@@ -16,9 +16,15 @@ import { NoteWidget } from '../widgets/NoteWidget';
 import { CalendarWidget } from '../widgets/CalendarWidget';
 import { TimerWidget } from '../widgets/TimerWidget';
 import { TodoWidget } from '../widgets/TodoWidget';
+import { DropWidget } from '../widgets/DropWidget';
 
 const WIDGETS: Record<PageId, () => JSX.Element> = {
-  music: MusicWidget, note: NoteWidget, calendar: CalendarWidget, timer: TimerWidget, todo: TodoWidget,
+  music: MusicWidget,
+  note: NoteWidget,
+  calendar: CalendarWidget,
+  timer: TimerWidget,
+  todo: TodoWidget,
+  drop: DropWidget,
 };
 
 const IDLE = 84;        // ukuran pill
@@ -44,10 +50,11 @@ export const FIGMA_HEIGHTS: Record<PageId, number> = {
   calendar: 670,
   timer: 232,
   todo: 365,
+  drop: 359,
 };
 
 export function Island() {
-  const { open, page, dir, wide, addingAct, timerMinimized, setOpen, goTo } = useUI();
+  const { open, page, dir, wide, addingAct, timerMinimized, dropCompact, setOpen, goTo } = useUI();
   const autoHide = useData((s) => s.autoHide);
   const reduce = useReducedMotion();
   const vp = useViewport();
@@ -62,12 +69,21 @@ export function Island() {
   const startPos = useRef<{ x: number; y: number } | null>(null);
 
   const isTimerMin = open && timerMinimized && page === 'timer';
+  const isDropCompact = open && page === 'drop' && dropCompact;
 
   const targetW = open
     ? (isTimerMin ? W_TIMER_MIN : (page === 'note' && wide ? W_WIDE : W))
     : IDLE;
   const targetH = open
-    ? (isTimerMin ? H_TIMER_MIN : (page === 'note' && wide ? 436 : (page === 'todo' && addingAct ? 785 : FIGMA_HEIGHTS[page])))
+    ? (isTimerMin
+        ? H_TIMER_MIN
+        : isDropCompact
+        ? 245
+        : page === 'note' && wide
+        ? 436
+        : page === 'todo' && addingAct
+        ? 785
+        : FIGMA_HEIGHTS[page])
     : IDLE;
   const w = targetW;
   const h = Math.min(targetH, vp.h - MARGIN * 2);

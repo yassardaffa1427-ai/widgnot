@@ -31,15 +31,15 @@ export function MusicWidget() {
         ) : !m.hasActiveMedia || !track ? (
           /* ---------- Figma Node 5:2933: Empty / No Music Here State ---------- */
           <motion.div key="empty-figma" className="music" {...fade}>
-            <div className="music__top">
+            <div className="music__top" style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', overflow: 'hidden' }}>
               {/* Gray placeholder cover with disc icon */}
               <div
                 style={{
-                  width: 86,
-                  height: 86,
-                  borderRadius: 20,
+                  width: 84,
+                  height: 84,
+                  borderRadius: 24,
                   backgroundColor: '#383838',
-                  flex: 'none',
+                  flexShrink: 0,
                   boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)',
                   display: 'grid',
                   placeItems: 'center',
@@ -48,9 +48,9 @@ export function MusicWidget() {
                 <Disc size={36} color="rgba(255, 255, 255, 0.45)" />
               </div>
 
-              <div className="music__meta">
-                <b style={{ fontSize: 18, fontWeight: 600, color: '#ffffff' }}>Name Song</b>
-                <span style={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.7)' }}>name producer</span>
+              <div className="music__meta" style={{ minWidth: 0, flex: '1 1 0%', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <b style={{ fontSize: 18, fontWeight: 600, color: '#ffffff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block', width: '100%' }}>Name Song</b>
+                <span style={{ fontSize: 13, color: 'rgba(255, 255, 255, 0.7)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 3, display: 'block', width: '100%' }}>name producer</span>
               </div>
 
               {/* Bluetooth / Earbuds Button (Figma 5:2933) */}
@@ -58,23 +58,26 @@ export function MusicWidget() {
                 className="icon-btn"
                 whileTap={{ scale: 0.92 }}
                 onClick={m.toggleBluetooth}
-                aria-label={m.btEnabled ? `Bluetooth Aktif (${m.btName})` : 'Bluetooth Mati'}
-                title={m.btEnabled ? `${m.btName} (Aktif)` : 'Bluetooth Mati'}
+                aria-label={m.btEnabled ? (m.btConnected ? `Bluetooth Terhubung: ${m.btName}` : 'Bluetooth Aktif') : 'Bluetooth Nonaktif (Disable)'}
+                title={m.btEnabled ? (m.btConnected ? `Terhubung: ${m.btName}` : 'Bluetooth Aktif') : 'Bluetooth Nonaktif (Klik untuk menyalakan)'}
                 style={{
+                  marginLeft: 'auto',
+                  flexShrink: 0,
                   width: 44,
                   height: 44,
                   borderRadius: '50%',
-                  backgroundColor: m.btEnabled ? '#0088ff' : '#222222',
-                  color: '#ffffff',
-                  boxShadow: m.btEnabled ? '0 4px 14px rgba(0, 136, 255, 0.45)' : 'none',
-                  flex: 'none',
+                  backgroundColor: m.btEnabled ? (m.btConnected ? '#0088ff' : '#28282c') : 'rgba(255, 255, 255, 0.05)',
+                  color: m.btEnabled ? '#ffffff' : 'rgba(255, 255, 255, 0.25)',
+                  border: m.btEnabled ? 'none' : '1px solid rgba(255, 255, 255, 0.08)',
+                  boxShadow: m.btEnabled && m.btConnected ? '0 4px 14px rgba(0, 136, 255, 0.45)' : 'none',
                   display: 'grid',
                   placeItems: 'center',
                   cursor: 'pointer',
+                  opacity: m.btEnabled ? 1 : 0.35,
                   transition: 'all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1)',
                 }}
               >
-                <AirPods size={24} />
+                {m.btConnected ? <AirPods size={22} /> : <Bluetooth size={22} />}
               </motion.button>
             </div>
 
@@ -150,10 +153,14 @@ export function MusicWidget() {
         ) : (
           /* ---------- Active Media Playing State (Figma Node 5:2927) ---------- */
           <motion.div key="player-active" className="music" {...fade}>
-            <div className="music__top">
+            <div className="music__top" style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', overflow: 'hidden' }}>
               <motion.div
                 className="music__cover"
                 style={{
+                  width: 84,
+                  height: 84,
+                  borderRadius: 24,
+                  flexShrink: 0,
                   background: track.thumbnail ? '#1b1b1b' : '#383838',
                   boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1)',
                   position: 'relative',
@@ -203,7 +210,7 @@ export function MusicWidget() {
                 />
               </motion.div>
 
-              <div className="music__meta" style={{ minWidth: 0, flex: 1, paddingRight: 6 }}>
+              <div className="music__meta" style={{ minWidth: 0, flex: '1 1 0%', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <b
                   title={track.name}
                   style={{
@@ -215,6 +222,7 @@ export function MusicWidget() {
                     whiteSpace: 'nowrap',
                     display: 'block',
                     lineHeight: 1.25,
+                    width: '100%',
                   }}
                 >
                   {track.name}
@@ -229,34 +237,38 @@ export function MusicWidget() {
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
                     marginTop: 3,
+                    width: '100%',
                   }}
                 >
                   {track.artist}
                 </span>
               </div>
 
-              {/* Real Windows Bluetooth Earbuds Button (Figma Node 5:2927) */}
+              {/* Real Windows Bluetooth Earbuds Button (Figma Node 5:2927) - Aligned Right */}
               <motion.button
                 className="icon-btn"
                 whileTap={{ scale: 0.92 }}
                 onClick={m.toggleBluetooth}
-                aria-label={m.btEnabled ? `Bluetooth Aktif (${m.btName}) - Klik untuk mematikan` : 'Bluetooth Nonaktif - Klik untuk menyalakan'}
-                title={m.btEnabled ? `${m.btName} (Aktif - Klik untuk mematikan)` : 'Bluetooth Mati (Klik untuk menyalakan)'}
+                aria-label={m.btEnabled ? (m.btConnected ? `Bluetooth Terhubung: ${m.btName}` : 'Bluetooth Aktif') : 'Bluetooth Nonaktif (Disable)'}
+                title={m.btEnabled ? (m.btConnected ? `Terhubung: ${m.btName}` : 'Bluetooth Aktif') : 'Bluetooth Nonaktif (Klik untuk menyalakan)'}
                 style={{
+                  marginLeft: 'auto',
+                  flexShrink: 0,
                   width: 44,
                   height: 44,
                   borderRadius: '50%',
-                  backgroundColor: m.btEnabled ? '#0088ff' : '#252528',
-                  color: '#ffffff',
-                  boxShadow: m.btEnabled ? '0 4px 14px rgba(0, 136, 255, 0.45)' : 'none',
-                  flex: 'none',
+                  backgroundColor: m.btEnabled ? (m.btConnected ? '#0088ff' : '#28282c') : 'rgba(255, 255, 255, 0.05)',
+                  color: m.btEnabled ? '#ffffff' : 'rgba(255, 255, 255, 0.25)',
+                  border: m.btEnabled ? 'none' : '1px solid rgba(255, 255, 255, 0.08)',
+                  boxShadow: m.btEnabled && m.btConnected ? '0 4px 14px rgba(0, 136, 255, 0.45)' : 'none',
                   display: 'grid',
                   placeItems: 'center',
                   cursor: 'pointer',
+                  opacity: m.btEnabled ? 1 : 0.35,
                   transition: 'all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1)',
                 }}
               >
-                <AirPods size={24} />
+                {m.btConnected ? <AirPods size={22} /> : <Bluetooth size={22} />}
               </motion.button>
             </div>
 

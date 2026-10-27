@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 
-export type PageId = 'music' | 'note' | 'calendar' | 'timer' | 'todo';
-/** Urutan halaman = urutan page-dot di Figma */
-export const PAGE_ORDER: PageId[] = ['music', 'note', 'calendar', 'timer', 'todo'];
+export type PageId = 'music' | 'note' | 'calendar' | 'timer' | 'todo' | 'drop';
+/** Urutan halaman = urutan page-dot di Figma (6 halaman) */
+export const PAGE_ORDER: PageId[] = ['music', 'note', 'calendar', 'timer', 'todo', 'drop'];
 
 interface UIState {
   open: boolean;
@@ -14,12 +14,15 @@ interface UIState {
   addingAct: boolean;
   /** true saat timer diminimalkan (293x145, node 11:1132 / 11:1238) */
   timerMinimized: boolean;
+  /** true saat widget drop diminimalkan (tinggi 245px) */
+  dropCompact: boolean;
   setOpen: (open: boolean) => void;
   go: (d: 1 | -1) => void;
   goTo: (p: PageId) => void;
   setWide: (w: boolean) => void;
   setAddingAct: (v: boolean) => void;
   setTimerMinimized: (v: boolean) => void;
+  setDropCompact: (v: boolean) => void;
 }
 
 export const useUI = create<UIState>((set, get) => ({
@@ -29,6 +32,7 @@ export const useUI = create<UIState>((set, get) => ({
   wide: false,
   addingAct: false,
   timerMinimized: false,
+  dropCompact: false,
   setOpen: (open) =>
     set({
       open,
@@ -49,4 +53,5 @@ export const useUI = create<UIState>((set, get) => ({
   setWide: (wide) => set({ wide }),
   setAddingAct: (addingAct) => set({ addingAct }),
   setTimerMinimized: (timerMinimized) => set({ timerMinimized }),
+  setDropCompact: (dropCompact) => set({ dropCompact }),
 }));

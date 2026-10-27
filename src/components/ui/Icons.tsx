@@ -108,3 +108,46 @@ export const CalendarDays = ({ size = 18, ...p }: P) => (
   </svg>
 );
 
+export const TrayArrowDown = ({ size = 28, ...p }: P) => (
+  <svg {...base(size, p)}>
+    <path
+      d="M4 16.5V19C4 20.1 4.9 21 6 21H18C19.1 21 20 20.1 20 19V16.5"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M12 3.5V15M12 15L7.5 10.5M12 15L16.5 10.5"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+export const DiagonalResize = ({ size = 18, ...p }: P) => (
+  <svg {...base(size, p)}>
+    <path
+      d="M15 4H20V9M20 4L13 11M9 20H4V15M4 20L11 13"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+export const DiagonalCollapse = ({ size = 18, ...p }: P) => (
+  <svg {...base(size, p)}>
+    <path
+      d="M14 10H20M14 10V4M14 10L20 4M10 14H4M10 14V20M10 14L4 20"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
