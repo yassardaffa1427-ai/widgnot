@@ -54,5 +54,8 @@ export function initTauriBridge() {
         if (unlisten) unlisten();
       };
     },
+    updateWidgetBounds: (bounds) => {
+      void invoke('update_widget_bounds', { bounds });
+    },
   };
 }

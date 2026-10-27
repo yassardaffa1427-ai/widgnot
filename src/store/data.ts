@@ -24,7 +24,7 @@ export const useData = create<DataState>()(
     (set) => ({
       notes: [],
       activities: [],
-      autoHide: true,
+      autoHide: false,
       addNote: (body = '') => {
         const id = uid();
         set((s) => ({ notes: [{ id, body, updatedAt: Date.now() }, ...s.notes] }));

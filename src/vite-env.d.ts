@@ -33,5 +33,13 @@ interface Window {
     getBluetoothStatus?: () => Promise<BluetoothData>;
     toggleBluetooth?: () => Promise<BluetoothData>;
     onBluetoothUpdate?: (callback: (data: BluetoothData) => void) => () => void;
+    updateWidgetBounds?: (bounds: {
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+      open: boolean;
+      dragging: boolean;
+    }) => void;
   };
 }

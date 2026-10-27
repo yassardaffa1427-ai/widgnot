@@ -93,14 +93,66 @@ fn set_window_click_through(hwnd: isize, ignore: bool) {
     }
 }
 
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
+pub struct WidgetBounds {
+    pub x: f64,
+    pub y: f64,
+    pub w: f64,
+    pub h: f64,
+    pub open: bool,
+    pub dragging: bool,
+}
+
+impl Default for WidgetBounds {
+    fn default() -> Self {
+        Self {
+            x: 1800.0,
+            y: 70.0,
+            w: 84.0,
+            h: 84.0,
+            open: false,
+            dragging: false,
+        }
+    }
+}
+
+pub struct AppState {
+    pub bounds: std::sync::Arc<std::sync::Mutex<WidgetBounds>>,
+}
+
+#[cfg(target_os = "windows")]
+#[repr(C)]
+struct POINT {
+    x: i32,
+    y: i32,
+}
+
+#[cfg(target_os = "windows")]
+unsafe extern "system" {
+    fn GetCursorPos(lpPoint: *mut POINT) -> i32;
+    fn ScreenToClient(hwnd: isize, lpPoint: *mut POINT) -> i32;
+}
+
+#[cfg(target_os = "windows")]
+fn apply_window_interactive(hwnd: isize, window: &tauri::WebviewWindow, interactive: bool) {
+    set_window_click_through(hwnd, !interactive);
+    let _ = window.set_ignore_cursor_events(!interactive);
+}
+
+#[tauri::command]
+fn update_widget_bounds(state: tauri::State<AppState>, bounds: WidgetBounds) {
+    if let Ok(mut b) = state.bounds.lock() {
+        *b = bounds;
+    }
+}
+
 #[tauri::command]
 fn set_interactive(app: tauri::AppHandle, interactive: bool) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("main") {
         #[cfg(target_os = "windows")]
         if let Ok(hwnd) = window.hwnd() {
-            set_window_click_through(hwnd.0 as isize, !interactive);
+            apply_window_interactive(hwnd.0 as isize, &window, interactive);
         }
-        let _ = window.set_ignore_cursor_events(!interactive);
     }
     Ok(())
 }
@@ -170,6 +222,7 @@ pub fn run() {
         )
         .invoke_handler(tauri::generate_handler![
             set_interactive,
+            update_widget_bounds,
             close_app,
             toggle_os_media,
             next_os_media,
@@ -178,11 +231,16 @@ pub fn run() {
             toggle_bluetooth
         ])
         .setup(|app| {
+            let bounds_arc = std::sync::Arc::new(std::sync::Mutex::new(WidgetBounds::default()));
+            app.manage(AppState {
+                bounds: bounds_arc.clone(),
+            });
+
             // Setup System Tray
             let toggle_item = MenuItem::with_id(
                 app,
                 "toggle",
-                "Buka / Tutup Widgnot (Alt+W)",
+                "Buka / Tutup Widgnot",
                 true,
                 None::<&str>,
             )?;
@@ -196,7 +254,7 @@ pub fn run() {
 
             let _tray = TrayIconBuilder::new()
                 .icon(tray_icon)
-                .tooltip("Widgnot — Hidden Island Widget (Alt+W)")
+                .tooltip("Widgnot — Island Widget")
                 .menu(&menu)
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "toggle" => {
@@ -228,10 +286,56 @@ pub fn run() {
                     let _ = main_window.set_size(tauri::Size::Physical(*size));
                     let _ = main_window.set_position(tauri::Position::Physical(*pos));
                 }
-
-                // Inisialisasi jendela: jangan set_ignore_cursor_events(true) di awal
-                // agar hover dan klik pada idle pill langsung responsif dan terdeteksi.
             }
+
+            // Start cursor monitoring thread for seamless click-through overlay
+            let app_cursor = app.handle().clone();
+            let bounds_cursor = bounds_arc.clone();
+            std::thread::spawn(move || {
+                let mut was_interactive = true;
+
+                loop {
+                    std::thread::sleep(std::time::Duration::from_millis(20));
+
+                    if let Some(main_window) = app_cursor.get_webview_window("main") {
+                        let bounds = {
+                            if let Ok(b) = bounds_cursor.lock() {
+                                *b
+                            } else {
+                                continue;
+                            }
+                        };
+
+                        #[cfg(target_os = "windows")]
+                        if let Ok(hwnd) = main_window.hwnd() {
+                            let should_be_interactive = if bounds.open || bounds.dragging {
+                                true
+                            } else {
+                                let mut pt = POINT { x: 0, y: 0 };
+                                let ok = unsafe { GetCursorPos(&mut pt) };
+                                if ok != 0 {
+                                    let _ = unsafe { ScreenToClient(hwnd.0 as isize, &mut pt) };
+                                    let scale = main_window.scale_factor().unwrap_or(1.0);
+                                    let cx = pt.x as f64 / scale;
+                                    let cy = pt.y as f64 / scale;
+
+                                    cx >= (bounds.x - 12.0)
+                                        && cx <= (bounds.x + bounds.w + 12.0)
+                                        && cy >= (bounds.y - 12.0)
+                                        && cy <= (bounds.y + bounds.h + 12.0)
+                                } else {
+                                    true
+                                }
+                            };
+
+                            if should_be_interactive != was_interactive {
+                                was_interactive = should_be_interactive;
+                                apply_window_interactive(hwnd.0 as isize, &main_window, should_be_interactive);
+                            }
+                        }
+                    }
+                }
+            });
 
             // Start background media & bluetooth polling thread
             let app_handle = app.handle().clone();

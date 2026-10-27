@@ -55,10 +55,11 @@ export function Island() {
 
   const x = useMotionValue(0);
   const y = useMotionValue(70);
-  const [dock, setDock] = useState<Dock>('right');
+  const [dock, setDock] = useState<Dock>(null);
   const [hover, setHover] = useState(false);
   const [dragging, setDragging] = useState(false);
   const dragged = useRef(false);
+  const startPos = useRef<{ x: number; y: number } | null>(null);
 
   const isTimerMin = open && timerMinimized && page === 'timer';
 
@@ -72,10 +73,12 @@ export function Island() {
   const h = Math.min(targetH, vp.h - MARGIN * 2);
   const spring = reduce ? instant : islandSpring;
 
-  // posisi awal: tepi kanan
-  useLayoutEffect(() => { x.set(window.innerWidth - IDLE - MARGIN); }, [x]);
+  // posisi awal: tepi kanan layar
+  useLayoutEffect(() => {
+    x.set(Math.max(MARGIN, window.innerWidth - IDLE - MARGIN));
+  }, [x]);
 
-  // jaga posisi saat ukuran berubah: menempel ke sisi dock (tumbuh dari tepi) atau di-clamp
+  // Jaga posisi saat ukuran berubah: menempel ke dock atau di-clamp dalam layar
   useEffect(() => {
     const maxX = vp.w - w - MARGIN;
     const maxY = vp.h - h - MARGIN;
@@ -86,7 +89,28 @@ export function Island() {
     return () => { a.stop(); b.stop(); };
   }, [w, h, dock, vp.w, vp.h, spring, x, y]);
 
-  // Esc = tutup, Alt+W = toggle
+  // Sync bounding box ke desktop overlay Tauri untuk hit-testing presisi
+  useEffect(() => {
+    const reportBounds = () => {
+      window.electronAPI?.updateWidgetBounds?.({
+        x: x.get(),
+        y: y.get(),
+        w,
+        h,
+        open,
+        dragging,
+      });
+    };
+    reportBounds();
+    const unsubX = x.on('change', reportBounds);
+    const unsubY = y.on('change', reportBounds);
+    return () => {
+      unsubX();
+      unsubY();
+    };
+  }, [w, h, open, dragging, x, y]);
+
+  // Esc = tutup, Alt+W = shortcut cadangan
   useEffect(() => {
     const on = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && open) setOpen(false);
@@ -99,29 +123,26 @@ export function Island() {
     return () => window.removeEventListener('keydown', on);
   }, [open, setOpen, goTo]);
 
-  useEffect(() => {
-    if (open) {
-      window.electronAPI?.setInteractive(true);
-    } else if (!hover) {
-      window.electronAPI?.setInteractive(false);
+  const openWidget = () => {
+    window.electronAPI?.setInteractive(true);
+    const t = useTimer.getState();
+    const isTimerActive = t.running || t.remaining < (t.mode === 'focus' ? t.focusSec : t.breakSec);
+    if (isTimerActive) {
+      goTo('timer');
+    } else {
+      goTo('music');
     }
-  }, [open, hover]);
+    setOpen(true);
+  };
 
   const onDragEnd = () => {
     setDragging(false);
     const maxX = vp.w - w - MARGIN;
     const maxY = vp.h - h - MARGIN;
     const s = reduce ? instant : snapSpring;
+    animate(x, clamp(x.get(), MARGIN, maxX), s);
     animate(y, clamp(y.get(), MARGIN, maxY), s);
-    if (!open) {
-      // pill: magnet ke tepi terdekat
-      const side: Dock = x.get() + w / 2 < vp.w / 2 ? 'left' : 'right';
-      setDock(side);
-      animate(x, side === 'left' ? MARGIN : maxX, s);
-    } else {
-      setDock(null);
-      animate(x, clamp(x.get(), MARGIN, maxX), s);
-    }
+    setDock(null);
   };
 
   const peek = !open && autoHide && dock !== null && !hover && !dragging;
@@ -135,6 +156,12 @@ export function Island() {
         className="dock"
         style={{ x, y }}
         drag dragControls={controls} dragListener={false} dragMomentum={false}
+        onDrag={(_, info) => {
+          if (Math.hypot(info.offset.x, info.offset.y) > 4) {
+            dragged.current = true;
+            if (!dragging) setDragging(true);
+          }
+        }}
         onDragStart={() => { dragged.current = true; setDragging(true); }}
         onDragEnd={onDragEnd}
         onPointerEnter={() => {
@@ -143,7 +170,6 @@ export function Island() {
         }}
         onPointerLeave={() => {
           setHover(false);
-          if (!open) window.electronAPI?.setInteractive(false);
         }}
       >
         <motion.div animate={{ x: peek ? peekX : 0 }} transition={reduce ? instant : snapSpring}>
@@ -186,35 +212,21 @@ export function Island() {
                   animate={{ opacity: 1, scale: 1, filter: 'blur(0px)', transition: { ...contentSpring, delay: reduce ? 0 : 0.05 } }}
                   exit={{ opacity: 0, scale: 0.6, filter: 'blur(8px)', transition: { duration: 0.12 } }}
                   onPointerDown={(e) => {
+                    startPos.current = { x: e.clientX, y: e.clientY };
                     dragged.current = false;
                     controls.start(e);
                   }}
-                  onPointerUp={() => {
-                    // Jika tidak bergeser saat pointer dilepas, buka island
-                    if (!dragged.current) {
-                      window.electronAPI?.setInteractive(true);
-                      const t = useTimer.getState();
-                      const isTimerActive = t.running || t.remaining < (t.mode === 'focus' ? t.focusSec : t.breakSec);
-                      if (isTimerActive) {
-                        goTo('timer');
-                      } else {
-                        goTo('music');
-                      }
-                      setOpen(true);
+                  onPointerUp={(e) => {
+                    const dx = startPos.current ? Math.abs(e.clientX - startPos.current.x) : 0;
+                    const dy = startPos.current ? Math.abs(e.clientY - startPos.current.y) : 0;
+                    if (!dragged.current || (dx < 6 && dy < 6)) {
+                      openWidget();
                     }
                   }}
                   onClick={(e) => {
                     e.preventDefault();
                     if (!dragged.current) {
-                      window.electronAPI?.setInteractive(true);
-                      const t = useTimer.getState();
-                      const isTimerActive = t.running || t.remaining < (t.mode === 'focus' ? t.focusSec : t.breakSec);
-                      if (isTimerActive) {
-                        goTo('timer');
-                      } else {
-                        goTo('music');
-                      }
-                      setOpen(true);
+                      openWidget();
                     }
                   }}
                 >
