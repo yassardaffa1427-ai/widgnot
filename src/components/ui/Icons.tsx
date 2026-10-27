@@ -75,6 +75,14 @@ export const Chevron = ({ size = 18, dir = 'down', ...p }: P & { dir?: 'up' | 'd
 };
 export const Bluetooth = ({ size = 26, ...p }: P) => (<svg {...base(size, p)}><path d="M7 7l10 10-5 4V3l5 4L7 17" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" /></svg>);
 export const Music = ({ size = 18, ...p }: P) => (<svg {...base(size, p)}><path d="M9 18V6l11-2v12" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" /><circle cx="6.5" cy="18" r="2.5" stroke="currentColor" strokeWidth="1.9" /><circle cx="17.5" cy="16" r="2.5" stroke="currentColor" strokeWidth="1.9" /></svg>);
+export const Disc = ({ size = 32, color = 'rgba(255, 255, 255, 0.45)', ...p }: P & { color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...p}>
+    <circle cx="12" cy="12" r="9.5" stroke={color} strokeWidth="1.5" />
+    <circle cx="12" cy="12" r="6.5" stroke={color} strokeWidth="1" strokeDasharray="2.5 2.5" opacity="0.6" />
+    <circle cx="12" cy="12" r="3.8" stroke={color} strokeWidth="1" opacity="0.8" />
+    <circle cx="12" cy="12" r="1.8" fill={color} />
+  </svg>
+);
 export const AirPods = ({ size = 24, ...p }: P) => (
   <svg {...base(size, p)}>
     <path

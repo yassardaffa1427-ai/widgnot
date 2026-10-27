@@ -1,7 +1,49 @@
 try {
     # 1. Try Windows GSMTC (Spotify desktop, Chrome, Edge, media players)
     [Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager, Windows.Media.Control, ContentType=WindowsRuntime] | Out-Null
+    [Windows.Storage.Streams.IRandomAccessStreamWithContentType, Windows.Storage.Streams, ContentType=WindowsRuntime] | Out-Null
     Add-Type -AssemblyName System.Runtime.WindowsRuntime -ErrorAction SilentlyContinue
+
+    $thumbHelperCode = @"
+using System;
+using System.IO;
+using System.Reflection;
+
+public class WinThumbHelper {
+    public static string ReadWinRtStream(object randomAccessStream) {
+        if (randomAccessStream == null) return null;
+        try {
+            Type extType = Type.GetType("System.IO.WindowsRuntimeStreamExtensions, System.Runtime.WindowsRuntime");
+            if (extType == null) {
+                foreach (var a in AppDomain.CurrentDomain.GetAssemblies()) {
+                    extType = a.GetType("System.IO.WindowsRuntimeStreamExtensions");
+                    if (extType != null) break;
+                }
+            }
+            if (extType == null) return null;
+            MethodInfo asStreamMethod = null;
+            foreach (var m in extType.GetMethods()) {
+                if (m.Name == "AsStream" && m.GetParameters().Length == 1) {
+                    asStreamMethod = m;
+                    break;
+                }
+            }
+            if (asStreamMethod == null) return null;
+            using (var stream = (Stream)asStreamMethod.Invoke(null, new object[] { randomAccessStream })) {
+                using (var ms = new MemoryStream()) {
+                    stream.CopyTo(ms);
+                    byte[] bytes = ms.ToArray();
+                    if (bytes != null && bytes.Length > 0) {
+                        return "data:image/jpeg;base64," + Convert.ToBase64String(bytes);
+                    }
+                }
+            }
+        } catch {}
+        return null;
+    }
+}
+"@
+    Add-Type -TypeDefinition $thumbHelperCode -Language CSharp -ErrorAction SilentlyContinue
 
     $asTaskGeneric = ([System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object { 
         $_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation`1' 
@@ -31,10 +73,29 @@ try {
                 $dur = if ($timeline -and $timeline.EndTime.TotalSeconds -gt 0) { [int]$timeline.EndTime.TotalSeconds } else { 180 }
                 $isSpot = ($app -match 'spotify')
 
+                $thumbUrl = ""
+                if ($p.Thumbnail) {
+                    try {
+                        $stream = Invoke-WinRTAsync ($p.Thumbnail.OpenReadAsync()) ([Windows.Storage.Streams.IRandomAccessStreamWithContentType])
+                        if ($stream) {
+                            $thumbUrl = [WinThumbHelper]::ReadWinRtStream($stream)
+                        }
+                    } catch {}
+                }
+
+                $rawTitle = $p.Title
+                $rawArtist = if ($p.Artist) { $p.Artist } else { if ($isSpot) { "Spotify" } else { "YouTube" } }
+                if ($rawTitle -match '^(.*?)\s*[-–—]\s*(.*?)$') {
+                    $rawArtist = $matches[1].Trim()
+                    $rawTitle = $matches[2].Trim()
+                }
+                $rawTitle = $rawTitle -replace '\s*[\(\[](?:Official\s*(?:Music\s*|Lyric\s*)?Video|Official\s*Audio|Lyric\s*Video|Full\s*Lyrics?|Audio|Visualizer|Music\s*Video|MV|HD|4K|Remastered|Live\s*Session|Audio\s*Video).*?[\)\]]', ''
+                $rawTitle = $rawTitle.Trim()
+
                 [PSCustomObject]@{
                     hasMedia = $true
-                    title = $p.Title
-                    artist = if ($p.Artist) { $p.Artist } else { if ($isSpot) { "Spotify" } else { "YouTube" } }
+                    title = if ($rawTitle) { $rawTitle } else { $p.Title }
+                    artist = $rawArtist
                     album = $p.AlbumTitle
                     appId = $app
                     status = $status
@@ -42,6 +103,7 @@ try {
                     position = $pos
                     duration = $dur
                     source = if ($isSpot) { 'spotify' } else { 'youtube' }
+                    thumbnail = if ($thumbUrl) { $thumbUrl } else { "" }
                 } | ConvertTo-Json -Compress
                 exit 0
             }
@@ -152,8 +214,8 @@ public class WinMediaDetector {
                 $trackArtist = "YouTube"
 
                 if ($clean -match '^(.*?)\s*[-–—]\s*(.*?)$') {
-                    $trackTitle = $matches[1].Trim()
-                    $trackArtist = $matches[2].Trim() + " · YouTube"
+                    $trackArtist = $matches[1].Trim()
+                    $trackTitle = $matches[2].Trim()
                 }
 
                 [PSCustomObject]@{

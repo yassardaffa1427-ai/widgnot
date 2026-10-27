@@ -11,6 +11,7 @@ interface OSMediaData {
   position?: number;
   duration?: number;
   source?: 'spotify' | 'youtube' | string;
+  thumbnail?: string;
 }
 
 interface Window {

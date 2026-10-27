@@ -7,6 +7,7 @@ export interface Track {
   url?: string;
   duration: number;
   coverGradient?: string;
+  thumbnail?: string;
   source?: 'spotify' | 'youtube' | 'local';
 }
 
@@ -109,6 +110,71 @@ class SynthPlayer {
 
 const synth = new SynthPlayer();
 const audio = typeof Audio !== 'undefined' ? new Audio() : (null as unknown as HTMLAudioElement);
+
+const artworkCache = new Map<string, string>();
+const pendingArtworkFetches = new Set<string>();
+
+export function parseTrackMeta(rawTitle: string, rawArtist?: string): { title: string; artist: string } {
+  let t = (rawTitle || '')
+    .replace(/^\(\d+\)\s*/, '')
+    .replace(/^[▶►]\s*/, '')
+    .trim();
+
+  // Bersihkan embel-embel umum video/audio YouTube (Official Video, Lyric Video, dll)
+  t = t.replace(/\s*[\(\[](?:Official\s*(?:Music\s*|Lyric\s*)?Video|Official\s*Audio|Lyric\s*Video|Full\s*Lyrics?|Audio|Visualizer|Music\s*Video|MV|HD|4K|Remastered|Live\s*Session|Audio\s*Video).*?[\)\]]/gi, '').trim();
+  t = t.replace(/\s*(?:\|\||\/\/).*$/, '').trim();
+
+  let artist = (rawArtist || '').trim();
+  let title = t;
+
+  // Bila format judul adalah "Artist - Song Title" atau "Artist – Song Title"
+  const dashMatch = t.match(/^(.*?)\s*[-–—]\s*(.*?)$/);
+  if (dashMatch) {
+    artist = dashMatch[1].trim();
+    title = dashMatch[2].trim();
+  }
+
+  // Bersihkan label channel seperti Official, VEVO, - Topic
+  artist = artist
+    .replace(/\s*-\s*Topic$/i, '')
+    .replace(/\s+Official$/i, '')
+    .replace(/VEVO$/i, '')
+    .trim();
+
+  if (!artist || artist.toLowerCase() === 'youtube') {
+    artist = rawArtist && rawArtist !== 'YouTube' ? rawArtist : 'YouTube';
+  }
+
+  return { title: title || rawTitle, artist: artist || 'Unknown Artist' };
+}
+
+async function fetchArtwork(title: string, artist?: string): Promise<string | null> {
+  const { title: cleanTitle, artist: cleanArtist } = parseTrackMeta(title, artist);
+  const query = cleanArtist && cleanArtist !== 'YouTube' && cleanArtist !== 'Spotify'
+    ? `${cleanArtist} ${cleanTitle}`
+    : cleanTitle;
+  const cacheKey = query.toLowerCase().trim();
+  if (artworkCache.has(cacheKey)) return artworkCache.get(cacheKey)!;
+  if (pendingArtworkFetches.has(cacheKey)) return null;
+
+  pendingArtworkFetches.add(cacheKey);
+  try {
+    const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=1`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.results && data.results.length > 0 && data.results[0].artworkUrl100) {
+        const artUrl = data.results[0].artworkUrl100.replace('100x100bb', '300x300bb');
+        artworkCache.set(cacheKey, artUrl);
+        return artUrl;
+      }
+    }
+  } catch {
+    // network or api error
+  } finally {
+    pendingArtworkFetches.delete(cacheKey);
+  }
+  return null;
+}
 
 export const useMusic = create<MusicState>((set, get) => {
   let tickInterval: number | null = null;
@@ -306,19 +372,35 @@ export const useMusic = create<MusicState>((set, get) => {
         const isSpotify = (payload.appId || payload.source || '').toLowerCase().includes('spotify') ||
                           (payload.artist || '').toLowerCase().includes('spotify');
         const trackSource = isSpotify ? 'spotify' : 'youtube';
+
+        const { title: cleanTitle, artist: cleanArtist } = parseTrackMeta(payload.title, payload.artist);
+
+        const currentTrack = get().tracks[get().index];
+        const isSameTrack = currentTrack && (currentTrack.name === cleanTitle || currentTrack.name === payload.title);
+
+        const query = cleanArtist && cleanArtist !== 'YouTube' && cleanArtist !== 'Spotify'
+          ? `${cleanArtist} ${cleanTitle}`
+          : cleanTitle;
+        const cacheKey = query.toLowerCase().trim();
+
+        let thumb = payload.thumbnail || (isSameTrack ? currentTrack?.thumbnail : undefined);
+        if (!thumb && artworkCache.has(cacheKey)) {
+          thumb = artworkCache.get(cacheKey);
+        } else if (payload.thumbnail) {
+          artworkCache.set(cacheKey, payload.thumbnail);
+        }
+
         const osTrack: Track = {
-          id: `os-${payload.title}`,
-          name: payload.title,
-          artist: payload.artist || (isSpotify ? 'Spotify' : 'YouTube'),
+          id: `os-${cleanTitle}`,
+          name: cleanTitle,
+          artist: cleanArtist || (isSpotify ? 'Spotify' : 'YouTube'),
           duration: payload.duration || 180,
           source: trackSource,
+          thumbnail: thumb,
           coverGradient: isSpotify
             ? 'linear-gradient(135deg, #1DB954 0%, #121212 90%)'
             : 'linear-gradient(135deg, #ff2a85 0%, #7b1fa2 50%, #1e1035 100%)',
         };
-
-        const currentTrack = get().tracks[get().index];
-        const isSameTrack = currentTrack && currentTrack.name === osTrack.name;
 
         set({
           hasActiveMedia: true,
@@ -330,6 +412,20 @@ export const useMusic = create<MusicState>((set, get) => {
           current: payload.position !== undefined && payload.position > 0 ? payload.position : (isSameTrack ? get().current : 0),
           duration: payload.duration || 180,
         });
+
+        // If no thumbnail yet, fetch from iTunes Search API in background
+        if (!thumb) {
+          void fetchArtwork(cleanTitle, cleanArtist).then((art) => {
+            if (art) {
+              const cur = get().tracks[get().index];
+              if (cur && (cur.name === cleanTitle || cur.name === payload.title)) {
+                set({
+                  tracks: [{ ...cur, thumbnail: art }],
+                });
+              }
+            }
+          });
+        }
       } else {
         const s = get();
         if (s.isOSMedia) {

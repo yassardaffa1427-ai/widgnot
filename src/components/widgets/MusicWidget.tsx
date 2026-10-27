@@ -1,8 +1,8 @@
 import { useRef } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { coverFor, useMusic } from '@/store/music';
+import { useMusic } from '@/store/music';
 import { fmtMMSS } from '@/lib/date';
-import { AirPods, Bluetooth, Pause, Play, Skip } from '../ui/Icons';
+import { AirPods, Bluetooth, Disc, Pause, Play, Skip } from '../ui/Icons';
 import { contentSpring } from '@/lib/motion';
 
 const fade = { initial: { opacity: 0, y: 6 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -6 }, transition: contentSpring };
@@ -32,17 +32,21 @@ export function MusicWidget() {
           /* ---------- Figma Node 5:2933: Empty / No Music Here State ---------- */
           <motion.div key="empty-figma" className="music" {...fade}>
             <div className="music__top">
-              {/* Gray placeholder cover from Figma 5:2933 */}
+              {/* Gray placeholder cover with disc icon */}
               <div
                 style={{
                   width: 86,
                   height: 86,
                   borderRadius: 20,
-                  backgroundColor: '#d9d9d9',
+                  backgroundColor: '#383838',
                   flex: 'none',
                   boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)',
+                  display: 'grid',
+                  placeItems: 'center',
                 }}
-              />
+              >
+                <Disc size={36} color="rgba(255, 255, 255, 0.45)" />
+              </div>
 
               <div className="music__meta">
                 <b style={{ fontSize: 18, fontWeight: 600, color: '#ffffff' }}>Name Song</b>
@@ -146,36 +150,93 @@ export function MusicWidget() {
               <motion.div
                 className="music__cover"
                 style={{
-                  background: coverFor(track),
+                  background: track.thumbnail ? '#1b1b1b' : '#383838',
                   boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1)',
                   position: 'relative',
                   overflow: 'hidden',
+                  display: 'grid',
+                  placeItems: 'center',
                 }}
                 animate={{ scale: m.playing ? 1 : 0.95 }}
                 transition={contentSpring}
               >
+                {track.thumbnail ? (
+                  <img
+                    src={track.thumbnail}
+                    alt={track.name}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      display: 'block',
+                    }}
+                    onError={(e) => {
+                      (e.currentTarget as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      display: 'grid',
+                      placeItems: 'center',
+                      width: '100%',
+                      height: '100%',
+                      background: '#383838',
+                    }}
+                  >
+                    <Disc size={36} color="rgba(255, 255, 255, 0.45)" />
+                  </div>
+                )}
+
                 {/* Visual subtle gloss shine */}
                 <div
                   style={{
                     position: 'absolute',
                     inset: 0,
-                    background: 'linear-gradient(135deg, rgba(255,255,255,0.25) 0%, transparent 60%)',
+                    background: 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 60%)',
                     pointerEvents: 'none',
                   }}
                 />
               </motion.div>
 
-              <div className="music__meta">
-                <b>{track.name}</b>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  {track.artist}
+              <div className="music__meta" style={{ minWidth: 0, flex: 1, paddingRight: 4 }}>
+                <b
+                  title={track.name}
+                  style={{
+                    fontSize: 18,
+                    fontWeight: 700,
+                    color: '#ffffff',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    display: 'block',
+                    lineHeight: 1.25,
+                  }}
+                >
+                  {track.name}
+                </b>
+                <span
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    fontSize: 13,
+                    color: 'rgba(255, 255, 255, 0.65)',
+                    overflow: 'hidden',
+                    whiteSpace: 'nowrap',
+                    marginTop: 3,
+                  }}
+                >
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {track.artist}
+                  </span>
                   {track.source === 'spotify' && (
-                    <span style={{ fontSize: 10, background: '#1db954', color: '#000', fontWeight: 700, padding: '1px 5px', borderRadius: 4 }}>
+                    <span style={{ fontSize: 10, background: '#1db954', color: '#000', fontWeight: 700, padding: '1px 5px', borderRadius: 4, flexShrink: 0 }}>
                       SPOTIFY
                     </span>
                   )}
                   {track.source === 'youtube' && (
-                    <span style={{ fontSize: 10, background: '#ff3333', color: '#fff', fontWeight: 700, padding: '1px 5px', borderRadius: 4 }}>
+                    <span style={{ fontSize: 10, background: '#ff3333', color: '#fff', fontWeight: 700, padding: '1px 5px', borderRadius: 4, flexShrink: 0 }}>
                       YOUTUBE
                     </span>
                   )}
