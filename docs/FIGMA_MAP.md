@@ -18,7 +18,7 @@ File: https://www.figma.com/design/FrgTIuGpf3fpWDsiTTJOK1/widgnot  ·  Frame uta
 | `5:2931` | calendar add | `AddActivityForm` | |
 | `5:2932` | focus timer | `TimerWidget` | |
 | `9:993` | focus timer, break time | `TimerWidget` (mode break) | |
-| `11:1132` `11:1238` | break/focus minimize (293×145) | **belum diimplementasi** | |
+| `11:1132` `11:1238` | break/focus minimize (293×145) | `TimerMinimize` | |
 | `11:1562` | todo opened | `TodoWidget` | |
 | `3:171` | navbar | `Navbar` | |
 | `4:586` | page info | `Pager` | |

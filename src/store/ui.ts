@@ -12,11 +12,14 @@ interface UIState {
   wide: boolean;
   /** true saat form add activities terbuka (node 26:3408, h: 785px) */
   addingAct: boolean;
+  /** true saat timer diminimalkan (293x145, node 11:1132 / 11:1238) */
+  timerMinimized: boolean;
   setOpen: (open: boolean) => void;
   go: (d: 1 | -1) => void;
   goTo: (p: PageId) => void;
   setWide: (w: boolean) => void;
   setAddingAct: (v: boolean) => void;
+  setTimerMinimized: (v: boolean) => void;
 }
 
 export const useUI = create<UIState>((set, get) => ({
@@ -25,17 +28,25 @@ export const useUI = create<UIState>((set, get) => ({
   dir: 1,
   wide: false,
   addingAct: false,
-  setOpen: (open) => set({ open, wide: open ? get().wide : false, addingAct: open ? get().addingAct : false }),
+  timerMinimized: false,
+  setOpen: (open) =>
+    set({
+      open,
+      wide: open ? get().wide : false,
+      addingAct: open ? get().addingAct : false,
+      timerMinimized: open ? get().timerMinimized : false,
+    }),
   go: (d) => {
     const i = PAGE_ORDER.indexOf(get().page);
     const next = PAGE_ORDER[(i + d + PAGE_ORDER.length) % PAGE_ORDER.length];
-    set({ page: next, dir: d, wide: false, addingAct: false });
+    set({ page: next, dir: d, wide: false, addingAct: false, timerMinimized: false });
   },
   goTo: (p) => {
     const cur = PAGE_ORDER.indexOf(get().page);
     const nx = PAGE_ORDER.indexOf(p);
-    set({ page: p, dir: nx >= cur ? 1 : -1, wide: false, addingAct: false });
+    set({ page: p, dir: nx >= cur ? 1 : -1, wide: false, addingAct: false, timerMinimized: false });
   },
   setWide: (wide) => set({ wide }),
   setAddingAct: (addingAct) => set({ addingAct }),
+  setTimerMinimized: (timerMinimized) => set({ timerMinimized }),
 }));

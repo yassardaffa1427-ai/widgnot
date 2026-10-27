@@ -11,7 +11,8 @@ export function IdlePill() {
   const timer = useTimer();
   const { playing, tracks, index, hasActiveMedia } = useMusic();
 
-  if (timer.running) {
+  const isTimerActive = timer.running || timer.remaining < timerTotal(timer);
+  if (isTimerActive) {
     return (
       <TimerSquirclePill
         remaining={timer.remaining}

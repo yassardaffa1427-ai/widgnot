@@ -24,7 +24,11 @@ export function BatteryRing() {
   return (
     <span style={{ position: 'relative', width: 29, height: 29, display: 'inline-grid', placeItems: 'center' }}>
       <Ring size={29} stroke={4} progress={b.level} color={color} track="rgba(255,255,255,0.12)" />
-      {b.charging && <span style={{ position: 'absolute' }}><Bolt size={14} /></span>}
+      {b.charging && (
+        <span style={{ position: 'absolute', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Bolt size={13} color="#ffffff" />
+        </span>
+      )}
     </span>
   );
 }

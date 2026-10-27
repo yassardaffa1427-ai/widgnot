@@ -50,7 +50,21 @@ export const Pause = ({ size = 16, ...p }: P) => (<svg {...base(size, p)}><rect 
 export const Skip = ({ size = 26, dir = 'next', ...p }: P & { dir?: 'next' | 'prev' }) => (
   <svg {...base(size, p)} style={{ transform: dir === 'prev' ? 'scaleX(-1)' : undefined }}><path d="M5 5l10 7-10 7V5zM18 5v14" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
 );
-export const Bolt = ({ size = 15, ...p }: P) => (<svg {...base(size, p)}><path d="M13 2L5 14h6l-1 8 8-12h-6l1-8z" fill="#21ff54" /></svg>);
+export const Bolt = ({ size = 14, color = '#ffffff', ...p }: P & { color?: string }) => (
+  <svg
+    width={(size * 10) / 14}
+    height={size}
+    viewBox="0 0 10 14"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...p}
+  >
+    <path
+      d="M1.316 6.235L3.772 2.922C5.079 1.172 5.729 0.297 6.185 0.497C6.641 0.697 6.435 1.772 5.997 3.916L5.972 4.053C5.835 4.741 5.766 5.091 5.954 5.322C6.141 5.553 6.491 5.547 7.204 5.547H7.597C8.679 5.547 9.216 5.547 9.391 5.891C9.566 6.235 9.241 6.666 8.604 7.541L6.104 10.935C4.791 12.722 4.129 13.61 3.672 13.41C3.216 13.21 3.435 12.122 3.872 9.947L3.916 9.722C4.054 9.035 4.122 8.685 3.934 8.453C3.747 8.222 3.397 8.228 2.685 8.228H2.316C1.229 8.228 0.691 8.228 0.516 7.885C0.341 7.541 0.666 7.103 1.316 6.228"
+      fill={color}
+    />
+  </svg>
+);
 export const CheckCircle = ({ size = 20, ...p }: P) => (
   <svg {...base(size, p)}><circle cx="12" cy="12" r="11" fill="#21ff54" /><path d="M7 12.5l3.2 3.2L17 9" stroke="#1b1b1b" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
 );

@@ -10,6 +10,7 @@ import { contentSpring, instant, islandSpring, snapSpring } from '@/lib/motion';
 import { Navbar } from './Navbar';
 import { Pager } from './Pager';
 import { IdlePill } from './IdlePill';
+import { TimerMinimize } from './TimerMinimize';
 import { MusicWidget } from '../widgets/MusicWidget';
 import { NoteWidget } from '../widgets/NoteWidget';
 import { CalendarWidget } from '../widgets/CalendarWidget';
@@ -23,6 +24,8 @@ const WIDGETS: Record<PageId, () => JSX.Element> = {
 const IDLE = 84;        // ukuran pill
 const W = 416;          // lebar panel
 const W_WIDE = 584;     // lebar editor catatan maksimal
+const W_TIMER_MIN = 293; // lebar minimize timer (node 11:1132)
+const H_TIMER_MIN = 145; // tinggi minimize timer (node 11:1132)
 const MARGIN = 16;      // jarak ke tepi layar
 const TAB = 26;         // bagian pill yang mengintip saat auto-hide
 type Dock = 'left' | 'right' | null;
@@ -44,7 +47,7 @@ export const FIGMA_HEIGHTS: Record<PageId, number> = {
 };
 
 export function Island() {
-  const { open, page, dir, wide, addingAct, setOpen, goTo } = useUI();
+  const { open, page, dir, wide, addingAct, timerMinimized, setOpen, goTo } = useUI();
   const autoHide = useData((s) => s.autoHide);
   const reduce = useReducedMotion();
   const vp = useViewport();
@@ -57,9 +60,13 @@ export function Island() {
   const [dragging, setDragging] = useState(false);
   const dragged = useRef(false);
 
-  const targetW = open ? (page === 'note' && wide ? W_WIDE : W) : IDLE;
+  const isTimerMin = open && timerMinimized && page === 'timer';
+
+  const targetW = open
+    ? (isTimerMin ? W_TIMER_MIN : (page === 'note' && wide ? W_WIDE : W))
+    : IDLE;
   const targetH = open
-    ? (page === 'note' && wide ? 436 : (page === 'todo' && addingAct ? 785 : FIGMA_HEIGHTS[page]))
+    ? (isTimerMin ? H_TIMER_MIN : (page === 'note' && wide ? 436 : (page === 'todo' && addingAct ? 785 : FIGMA_HEIGHTS[page])))
     : IDLE;
   const w = targetW;
   const h = Math.min(targetH, vp.h - MARGIN * 2);
@@ -144,25 +151,33 @@ export function Island() {
             <AnimatePresence initial={false} mode="popLayout">
               {open ? (
                 <motion.div
-                  key="panel" className="panel" style={{ width: '100%', height: '100%', transformOrigin: origin }}
+                  key={isTimerMin ? 'timer-min' : 'panel'}
+                  className="panel"
+                  style={{ width: '100%', height: '100%', transformOrigin: origin }}
                   initial={{ opacity: 0, scale: 0.9, filter: 'blur(12px)' }}
                   animate={{ opacity: 1, scale: 1, filter: 'blur(0px)', transition: { ...contentSpring, delay: reduce ? 0 : 0.07 } }}
                   exit={{ opacity: 0, scale: 0.9, filter: 'blur(12px)', transition: { duration: 0.14 } }}
                 >
-                  <Navbar controls={controls} onDragBegin={() => { dragged.current = false; }} />
-                  <div className="body">
-                    <div className="body__scroll">
-                      <AnimatePresence initial={false} mode="wait" custom={dir}>
-                        <motion.div
-                          key={page} custom={dir} variants={pageV} initial="enter" animate="center" exit="exit"
-                          transition={contentSpring}
-                        >
-                          <Widget />
-                        </motion.div>
-                      </AnimatePresence>
-                    </div>
-                  </div>
-                  <Pager />
+                  {isTimerMin ? (
+                    <TimerMinimize controls={controls} onDragBegin={() => { dragged.current = false; }} />
+                  ) : (
+                    <>
+                      <Navbar controls={controls} onDragBegin={() => { dragged.current = false; }} />
+                      <div className="body">
+                        <div className="body__scroll">
+                          <AnimatePresence initial={false} mode="wait" custom={dir}>
+                            <motion.div
+                              key={page} custom={dir} variants={pageV} initial="enter" animate="center" exit="exit"
+                              transition={contentSpring}
+                            >
+                              <Widget />
+                            </motion.div>
+                          </AnimatePresence>
+                        </div>
+                      </div>
+                      <Pager />
+                    </>
+                  )}
                 </motion.div>
               ) : (
                 <motion.button
@@ -173,7 +188,9 @@ export function Island() {
                   onPointerDown={(e) => { dragged.current = false; controls.start(e); }}
                   onClick={() => {
                     if (!dragged.current) {
-                      if (useTimer.getState().running) {
+                      const t = useTimer.getState();
+                      const isTimerActive = t.running || t.remaining < (t.mode === 'focus' ? t.focusSec : t.breakSec);
+                      if (isTimerActive) {
                         goTo('timer');
                       } else {
                         goTo('music');
