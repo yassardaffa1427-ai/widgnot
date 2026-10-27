@@ -82,7 +82,11 @@ const fs = require('fs');
 function getScriptPath() {
   const targetPath = path.join(app.getPath('userData'), 'get-media.ps1');
   try {
-    const bundledScriptPath = path.join(__dirname, 'get-media.ps1');
+    let bundledScriptPath = path.join(__dirname, 'get-media.ps1');
+    if (!fs.existsSync(bundledScriptPath) && process.resourcesPath) {
+      const unpacked = path.join(process.resourcesPath, 'app.asar.unpacked', 'electron', 'get-media.ps1');
+      if (fs.existsSync(unpacked)) bundledScriptPath = unpacked;
+    }
     if (fs.existsSync(bundledScriptPath)) {
       const content = fs.readFileSync(bundledScriptPath, 'utf8');
       fs.writeFileSync(targetPath, content, 'utf8');
@@ -109,7 +113,7 @@ function startMediaTracking() {
     execFile(
       'powershell.exe',
       ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', scriptPath],
-      { windowsHide: true, timeout: 3500 },
+      { windowsHide: true, timeout: 3500, maxBuffer: 10 * 1024 * 1024 },
       (err, stdout) => {
         isPolling = false;
         if (!err && stdout && mainWindow && !mainWindow.isDestroyed()) {
