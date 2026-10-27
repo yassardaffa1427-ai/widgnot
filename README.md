@@ -5,13 +5,13 @@
 <h1 align="center">Widgnot</h1>
 
 <p align="center">
-  <b>Hidden Island Desktop Widget</b> dengan animasi liquid Dynamic Island untuk Windows.<br />
-  <i>Music Player · Notes · Calendar & Activities · Timer · Todo List</i>
+  <b>Dynamic Island Desktop Widget</b> dengan animasi liquid untuk Windows.<br />
+  <i>Music Player · Notes · Calendar & Activities · Timer · Todo List · Drag once, paste later</i>
 </p>
 
 <p align="center">
   <a href="https://github.com/yassardaffa1427-ai/widgnot/releases/latest">
-    <img src="https://img.shields.io/github/v/release/yassardaffa1427-ai/widgnot?style=for-the-badge&color=0088ff&label=Download%20Installer%20(2.9%20MB)" alt="Download Windows Installer" />
+    <img src="https://img.shields.io/github/v/release/yassardaffa1427-ai/widgnot?style=for-the-badge&color=0088ff&label=Download%20Installer%20v2.2.0%20(2.9%20MB)" alt="Download Windows Installer" />
   </a>
   <img src="https://img.shields.io/badge/Platform-Windows-0078d7?style=for-the-badge&logo=windows&logoColor=white" alt="Windows" />
   <img src="https://img.shields.io/badge/Engine-Tauri%20v2%20(Rust)-ffc131?style=for-the-badge&logo=tauri&logoColor=black" alt="Tauri v2" />
@@ -23,23 +23,28 @@
 
 ## ✦ Fitur Utama
 
-- **🏝️ Hidden Dynamic Island**: Widget mengambang transparan di tepi layar dengan animasi spring "liquid" yang mulus.
-- **🎵 Live Media Synchronization**: Melacak secara langsung apa pun lagu yang sedang diputar di laptop, termasuk **YouTube** di browser (Opera, Opera GX, Chrome, Edge, Firefox) dan **Spotify Desktop**, lengkap dengan kontrol putar/jeda, lagu berikutnya, dan sebelumnya.
-- **📝 Quick Notes**: Tulis dan simpan catatan cepat dengan mudah langsung dari island.
-- **📅 Calendar & Activities**: Jadwal aktivitas harian dengan picker tanggal dan waktu terintegrasi.
-- **⏳ Focus & Idle Timer**: Timer squircle gradient interaktif (desain Figma node `11:1282`) untuk melacak waktu fokus.
+- **🖱️ Freely Draggable & Click to Open**: Island dapat di-drag dan ditempatkan bebas di posisi mana pun di monitor Anda, serta dapat dibuka secara instan cukup dengan satu klik mouse pada pill saat idle (tanpa wajib menekan shortcut).
+- **📋 Drag once, paste later (Halaman ke-6)**: Fitur clipboard visual untuk menampung banyak gambar sekaligus (lewat `Ctrl + V` atau *drag & drop*). Pengguna dapat memilih dan menyalin gambar satu per satu untuk di-paste kembali di platform media manapun seperti **Figma**, Discord, WhatsApp, atau Slack sesuai gambar yang dipilih.
+- **🎵 Live Media & Real Bluetooth Integration**: Melacak secara langsung lagu yang sedang diputar di laptop (YouTube browser & Spotify Desktop) dengan pemotongan judul lagu yang rapi (*ellipsis*), serta tombol status Bluetooth perangkat (AirPods, TWS, headphone) yang terintegrasi langsung dengan Windows radio.
+- **📝 Quick Notes**: Tulis dan simpan catatan cepat dengan mudah langsung dari island, lengkap dengan mode perluas editor (*expand*).
+- **📅 Calendar & Activities**: Jadwal aktivitas harian interaktif dengan penanda tanggal dan agenda.
+- **⏳ Focus & Idle Timer**: Timer squircle gradient (Figma node `11:1282`) untuk melacak waktu fokus produktif Anda.
 - **✅ Todo List**: Checklist tugas harian yang tersimpan secara lokal dan persisten.
-- **⚡ Background & System Tray**: Aplikasi berjalan di belakang layar tanpa mengotori taskbar. Dapat diakses kapan saja lewat icon System Tray atau hotkey global.
+- **⚡ Seamless Click-Through**: Area transparan desktop overlay 100% tembus klik ke aplikasi lain, dan langsung responsif ketika kursor menyentuh pill Widgnot.
+- **⚡ Background & System Tray**: Berjalan ringan di latar belakang (~30 MB RAM) tanpa mengotori taskbar, dan dapat diakses cepat lewat icon System Tray.
 
 ---
 
-## ⌨️ Pintasan Keyboard (Hotkeys)
+## 🖱️ Interaksi & Navigasi
 
-| Shortcut | Aksi |
+| Aksi | Fungsi |
 | --- | --- |
-| `Alt + W` | **Buka / Tutup Widgnot** dari aplikasi apa pun |
-| `Esc` | Tutup panel island ke mode pill mengambang |
-| `Drag Navbar` | Geser dan pindahkan posisi island ke sisi layar mana pun (magnet tepi otomatis) |
+| **Klik Pill Saat Idle** | Membuka fitur Widgnot secara instan |
+| **Drag Pill / Navbar** | Geser dan pindahkan posisi widget ke mana saja di layar |
+| **Klik Gambar di "Drag once"** | Menyalin gambar terpilih ke clipboard (siap di-paste ke Figma / platform lain) |
+| `Ctrl + V` di halaman ke-6 | Menempelkan gambar baru langsung dari clipboard ke koleksi |
+| `Esc` | Menutup panel kembali ke mode pill mengambang |
+| `Alt + W` *(Opsional)* | Pintasan keyboard global alternatif untuk toggle buka/tutup |
 
 ---
 
