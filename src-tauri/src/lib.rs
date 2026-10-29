@@ -118,6 +118,7 @@ impl Default for WidgetBounds {
 
 pub struct AppState {
     pub bounds: std::sync::Arc<std::sync::Mutex<WidgetBounds>>,
+    pub is_interactive: std::sync::Arc<std::sync::atomic::AtomicBool>,
 }
 
 #[cfg(target_os = "windows")]
@@ -147,7 +148,8 @@ fn update_widget_bounds(state: tauri::State<AppState>, bounds: WidgetBounds) {
 }
 
 #[tauri::command]
-fn set_interactive(app: tauri::AppHandle, interactive: bool) -> Result<(), String> {
+fn set_interactive(state: tauri::State<AppState>, app: tauri::AppHandle, interactive: bool) -> Result<(), String> {
+    state.is_interactive.store(interactive, std::sync::atomic::Ordering::SeqCst);
     if let Some(window) = app.get_webview_window("main") {
         #[cfg(target_os = "windows")]
         if let Ok(hwnd) = window.hwnd() {
@@ -232,8 +234,10 @@ pub fn run() {
         ])
         .setup(|app| {
             let bounds_arc = std::sync::Arc::new(std::sync::Mutex::new(WidgetBounds::default()));
+            let is_interactive_arc = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(true));
             app.manage(AppState {
                 bounds: bounds_arc.clone(),
+                is_interactive: is_interactive_arc.clone(),
             });
 
             // Setup System Tray
@@ -291,11 +295,10 @@ pub fn run() {
             // Start cursor monitoring thread for seamless click-through overlay
             let app_cursor = app.handle().clone();
             let bounds_cursor = bounds_arc.clone();
+            let is_interactive_cursor = is_interactive_arc.clone();
             std::thread::spawn(move || {
-                let mut was_interactive = true;
-
                 loop {
-                    std::thread::sleep(std::time::Duration::from_millis(20));
+                    std::thread::sleep(std::time::Duration::from_millis(16));
 
                     if let Some(main_window) = app_cursor.get_webview_window("main") {
                         let bounds = {
@@ -308,7 +311,7 @@ pub fn run() {
 
                         #[cfg(target_os = "windows")]
                         if let Ok(hwnd) = main_window.hwnd() {
-                            let should_be_interactive = if bounds.open || bounds.dragging {
+                            let should_be_interactive = if bounds.dragging {
                                 true
                             } else {
                                 let mut pt = POINT { x: 0, y: 0 };
@@ -319,17 +322,23 @@ pub fn run() {
                                     let cx = pt.x as f64 / scale;
                                     let cy = pt.y as f64 / scale;
 
-                                    cx >= (bounds.x - 12.0)
-                                        && cx <= (bounds.x + bounds.w + 12.0)
-                                        && cy >= (bounds.y - 12.0)
-                                        && cy <= (bounds.y + bounds.h + 12.0)
+                                    let pad_top = if bounds.open { 14.0 } else { 190.0 };
+                                    let pad_bottom = 14.0;
+                                    let pad_left = if bounds.open { 14.0 } else { 340.0 };
+                                    let pad_right = if bounds.open { 14.0 } else { 340.0 };
+
+                                    cx >= (bounds.x - pad_left)
+                                        && cx <= (bounds.x + bounds.w + pad_right)
+                                        && cy >= (bounds.y - pad_top)
+                                        && cy <= (bounds.y + bounds.h + pad_bottom)
                                 } else {
                                     true
                                 }
                             };
 
-                            if should_be_interactive != was_interactive {
-                                was_interactive = should_be_interactive;
+                            let current_interactive = is_interactive_cursor.load(std::sync::atomic::Ordering::SeqCst);
+                            if should_be_interactive != current_interactive {
+                                is_interactive_cursor.store(should_be_interactive, std::sync::atomic::Ordering::SeqCst);
                                 apply_window_interactive(hwnd.0 as isize, &main_window, should_be_interactive);
                             }
                         }

@@ -2,7 +2,15 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 export interface Note { id: string; body: string; updatedAt: number }
-export interface Activity { id: string; title: string; date: string; time: string; done: boolean; notes?: string }
+export interface Activity {
+  id: string;
+  title: string;
+  date: string;
+  time: string;           // waktu mulai (e.g. "16:00")
+  deadlineTime?: string;  // waktu deadline (e.g. "17:00")
+  done: boolean;
+  notes?: string;
+}
 
 interface DataState {
   notes: Note[];
@@ -24,7 +32,7 @@ export const useData = create<DataState>()(
     (set) => ({
       notes: [],
       activities: [],
-      autoHide: false,
+      autoHide: true,
       addNote: (body = '') => {
         const id = uid();
         set((s) => ({ notes: [{ id, body, updatedAt: Date.now() }, ...s.notes] }));
@@ -39,6 +47,16 @@ export const useData = create<DataState>()(
       removeActivity: (id) => set((s) => ({ activities: s.activities.filter((a) => a.id !== id) })),
       setAutoHide: (autoHide) => set({ autoHide }),
     }),
-    { name: 'widgnot:data:v3' },
+    {
+      name: 'widgnot:data:v4',
+      migrate: (persistedState: any) => {
+        if (!persistedState) return { notes: [], activities: [], autoHide: true };
+        return {
+          ...persistedState,
+          autoHide: persistedState.autoHide ?? true,
+        };
+      },
+      version: 4,
+    },
   ),
 );

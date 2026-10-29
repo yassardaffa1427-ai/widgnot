@@ -4,16 +4,18 @@ import { contentSpring } from '@/lib/motion';
 import { CalendarDays, Check, Clock } from './Icons';
 import { toKey } from '@/lib/date';
 
-interface ActivityFormData {
+export interface ActivityFormData {
   title: string;
   date: string;
   time: string;
+  deadlineTime?: string;
   notes?: string;
 }
 
 interface Props {
   initialDate?: string;
   initialTime?: string;
+  initialDeadlineTime?: string;
   onSubmit: (data: ActivityFormData) => void;
   onCancel: () => void;
 }
@@ -28,19 +30,26 @@ const BULAN_PENDEK = [
   'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'
 ];
 
+/**
+ * Form tambah aktivitas sesuai Figma Node 26:3408
+ * Mendukung Tanggal, Waktu Mulai, dan Waktu Deadline
+ */
 export function AddActivityForm({
   initialDate = toKey(new Date()),
   initialTime = '16:00',
+  initialDeadlineTime = '16:00',
   onSubmit,
   onCancel,
 }: Props) {
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(initialDate);
   const [time, setTime] = useState(initialTime);
+  const [deadlineTime, setDeadlineTime] = useState(initialDeadlineTime);
   const [notes, setNotes] = useState('');
 
   const dateInputRef = useRef<HTMLInputElement>(null);
   const timeInputRef = useRef<HTMLInputElement>(null);
+  const deadlineInputRef = useRef<HTMLInputElement>(null);
 
   // Format date display for pill: "20 Apr 2026"
   const dateObj = new Date(date + 'T12:00:00');
@@ -53,7 +62,8 @@ export function AddActivityForm({
 
   // Time formatted with dot, e.g. "16.00"
   const formattedTime = time.replace(':', '.');
-  const summaryText = `${dayName}, ${dNum} ${monthName} ${yNum} · ${formattedTime} WIB`;
+  const formattedDeadline = deadlineTime.replace(':', '.');
+  const summaryText = `${dayName}, ${dNum} ${monthName} ${yNum} · ${formattedTime}${deadlineTime && deadlineTime !== time ? ` - ${formattedDeadline}` : ''} WIB`;
 
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -62,6 +72,7 @@ export function AddActivityForm({
       title: cleanTitle,
       date,
       time,
+      deadlineTime: deadlineTime || undefined,
       notes: notes.trim() || undefined,
     });
   };
@@ -92,7 +103,7 @@ export function AddActivityForm({
           />
         </div>
 
-        {/* Card 2: Tanggal & Waktu */}
+        {/* Card 2: Tanggal, Waktu Mulai & Waktu Deadline (Figma 26:3408) */}
         <div className="act-form__card act-form__card--schedule">
           {/* Row 1: Tanggal */}
           <div className="act-form__row">
@@ -126,11 +137,11 @@ export function AddActivityForm({
 
           <div className="act-form__divider" />
 
-          {/* Row 2: Waktu */}
+          {/* Row 2: Waktu mulai */}
           <div className="act-form__row">
             <div className="act-form__row-left">
               <Clock size={18} style={{ color: '#a3a3a7' }} />
-              <span className="act-form__row-text">Waktu</span>
+              <span className="act-form__row-text">Waktu mulai</span>
             </div>
             <div
               className="act-form__pill"
@@ -143,7 +154,7 @@ export function AddActivityForm({
               }}
               role="button"
               tabIndex={0}
-              aria-label="Ubah waktu"
+              aria-label="Ubah waktu mulai"
             >
               <span>{formattedTime}</span>
               <input
@@ -152,6 +163,38 @@ export function AddActivityForm({
                 type="time"
                 value={time}
                 onChange={(e) => e.target.value && setTime(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="act-form__divider" />
+
+          {/* Row 3: Waktu deadline (Figma 26:3408) */}
+          <div className="act-form__row">
+            <div className="act-form__row-left">
+              <Clock size={18} style={{ color: '#a3a3a7' }} />
+              <span className="act-form__row-text">waktu deadline</span>
+            </div>
+            <div
+              className="act-form__pill"
+              onClick={() => {
+                try {
+                  deadlineInputRef.current?.showPicker();
+                } catch {
+                  deadlineInputRef.current?.focus();
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label="Ubah waktu deadline"
+            >
+              <span>{formattedDeadline}</span>
+              <input
+                ref={deadlineInputRef}
+                className="act-form__hidden-picker"
+                type="time"
+                value={deadlineTime}
+                onChange={(e) => e.target.value && setDeadlineTime(e.target.value)}
               />
             </div>
           </div>

@@ -40,8 +40,8 @@ export function TodoWidget() {
             initialDate={today}
             initialTime="16:00"
             onCancel={() => setAddingAct(false)}
-            onSubmit={({ title, date, time, notes }) => {
-              addActivity({ title, time, date, notes });
+            onSubmit={({ title, date, time, deadlineTime, notes }) => {
+              addActivity({ title, time, deadlineTime, date, notes });
               setAddingAct(false);
             }}
           />

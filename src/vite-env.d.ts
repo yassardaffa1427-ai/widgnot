@@ -18,6 +18,9 @@ interface BluetoothData {
   enabled: boolean;
   connected: boolean;
   deviceName?: string;
+  battery?: number | null;
+  batteryR?: number | null;
+  batteryL?: number | null;
 }
 
 interface Window {
@@ -33,6 +36,8 @@ interface Window {
     getBluetoothStatus?: () => Promise<BluetoothData>;
     toggleBluetooth?: () => Promise<BluetoothData>;
     onBluetoothUpdate?: (callback: (data: BluetoothData) => void) => () => void;
+    onSetAutoHide?: (callback: (val: boolean) => void) => () => void;
+    notifyAutoHideChanged?: (val: boolean) => void;
     updateWidgetBounds?: (bounds: {
       x: number;
       y: number;

@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, useSpring } from 'motion/react';
 
 export type MascotMood = 'left' | 'center' | 'right';
+export type MascotUrgency = 'normal' | 'warning' | 'angry';
 
 interface MascotProps {
   size?: number;
   interactive?: boolean;
   forcedMood?: MascotMood;
+  urgency?: MascotUrgency;
   onClick?: (e: React.MouseEvent) => void;
 }
 
@@ -15,8 +17,16 @@ interface MascotProps {
  * - 13:1817: state=1 (curious, looking left, right eyebrow slanted)
  * - 16:1921: state=2 (focused, looking right, eyebrows angled inward)
  * - 18:1927: state=3 (gentle, looking center, balanced eyebrows)
+ * - Urgency 'warning': orange/yellow head with warning eyebrows
+ * - Urgency 'angry': red head with angry eyebrows & agitation
  */
-export function Mascot({ size = 84, interactive = true, forcedMood, onClick }: MascotProps) {
+export function Mascot({
+  size = 84,
+  interactive = true,
+  forcedMood,
+  urgency = 'normal',
+  onClick,
+}: MascotProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [mood, setMood] = useState<MascotMood>(forcedMood || 'center');
   const [blinking, setBlink] = useState(false);
@@ -33,8 +43,32 @@ export function Mascot({ size = 84, interactive = true, forcedMood, onClick }: M
   const browLeftY = useSpring(0, { stiffness: 240, damping: 20 });
   const browRightY = useSpring(0, { stiffness: 240, damping: 20 });
 
-  // Update springs to match Figma nodes
+  // Update springs to match Figma nodes & urgency
   useEffect(() => {
+    if (urgency === 'angry') {
+      eyeSpringX.set(0);
+      eyeSpringY.set(1);
+      browLeftRotate.set(-28);
+      browRightRotate.set(28);
+      browLeftX.set(2);
+      browRightX.set(-2);
+      browLeftY.set(2);
+      browRightY.set(2);
+      return;
+    }
+
+    if (urgency === 'warning') {
+      eyeSpringX.set(0);
+      eyeSpringY.set(0);
+      browLeftRotate.set(-24);
+      browRightRotate.set(24);
+      browLeftX.set(1.5);
+      browRightX.set(-1.5);
+      browLeftY.set(1.5);
+      browRightY.set(1.5);
+      return;
+    }
+
     const activeMood = forcedMood || mood;
     if (activeMood === 'left') {
       // Figma node 13:1817 (state 1: looking left)
@@ -67,18 +101,29 @@ export function Mascot({ size = 84, interactive = true, forcedMood, onClick }: M
       browLeftY.set(0);
       browRightY.set(0);
     }
-  }, [mood, forcedMood, eyeSpringX, eyeSpringY, browLeftRotate, browRightRotate, browLeftX, browRightX, browLeftY, browRightY]);
+  }, [
+    mood,
+    forcedMood,
+    urgency,
+    eyeSpringX,
+    eyeSpringY,
+    browLeftRotate,
+    browRightRotate,
+    browLeftX,
+    browRightX,
+    browLeftY,
+    browRightY,
+  ]);
 
   // Natural lifelike blinking
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
     const scheduleBlink = () => {
-      const delay = 2500 + Math.random() * 3200;
+      const delay = (urgency === 'angry' ? 1400 : 2500) + Math.random() * 3000;
       timer = setTimeout(() => {
         setBlink(true);
         setTimeout(() => {
           setBlink(false);
-          // 25% chance of quick double blink
           if (Math.random() < 0.25) {
             setTimeout(() => {
               setBlink(true);
@@ -96,11 +141,11 @@ export function Mascot({ size = 84, interactive = true, forcedMood, onClick }: M
 
     scheduleBlink();
     return () => clearTimeout(timer);
-  }, []);
+  }, [urgency]);
 
   // Autonomous idle glances
   useEffect(() => {
-    if (forcedMood) return;
+    if (forcedMood || urgency !== 'normal') return;
     let glanceTimer: ReturnType<typeof setTimeout>;
 
     const scheduleGlance = () => {
@@ -115,11 +160,11 @@ export function Mascot({ size = 84, interactive = true, forcedMood, onClick }: M
 
     scheduleGlance();
     return () => clearTimeout(glanceTimer);
-  }, [forcedMood]);
+  }, [forcedMood, urgency]);
 
   // Interactive mouse tracking
   useEffect(() => {
-    if (!interactive || forcedMood) return;
+    if (!interactive || forcedMood || urgency !== 'normal') return;
 
     const handlePointerMove = (e: MouseEvent) => {
       if (!containerRef.current) return;
@@ -151,9 +196,9 @@ export function Mascot({ size = 84, interactive = true, forcedMood, onClick }: M
 
     window.addEventListener('mousemove', handlePointerMove, { passive: true });
     return () => window.removeEventListener('mousemove', handlePointerMove);
-  }, [interactive, forcedMood, eyeSpringX, eyeSpringY]);
+  }, [interactive, forcedMood, urgency, eyeSpringX, eyeSpringY]);
 
-  // Poke reaction & open
+  // Poke reaction
   const handlePoke = (e: React.MouseEvent) => {
     setSquishing(true);
     setBlink(true);
@@ -165,6 +210,20 @@ export function Mascot({ size = 84, interactive = true, forcedMood, onClick }: M
   };
 
   const scale = size / 84;
+
+  const bodyGradient =
+    urgency === 'angry'
+      ? 'linear-gradient(180deg, #FF334B 0%, #FF6B81 55%, #FFFFFF 100%)'
+      : urgency === 'warning'
+      ? 'linear-gradient(180deg, #FFA000 0%, #FFD54F 55%, #FFFFFF 100%)'
+      : 'linear-gradient(180deg, #0088ff 0%, #ffffff 100%)';
+
+  const bodyShadow =
+    urgency === 'angry'
+      ? '0 6px 20px rgba(255, 51, 75, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.6), 0 0 0 0.5px rgba(255, 255, 255, 0.15)'
+      : urgency === 'warning'
+      ? '0 6px 20px rgba(255, 160, 0, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.6), 0 0 0 0.5px rgba(255, 255, 255, 0.15)'
+      : '0 6px 20px rgba(0, 136, 255, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.6), 0 0 0 0.5px rgba(255, 255, 255, 0.15)';
 
   return (
     <div
@@ -186,11 +245,13 @@ export function Mascot({ size = 84, interactive = true, forcedMood, onClick }: M
       <motion.div
         animate={{
           y: squishing ? 4 : hovered ? -3 : [0, -2.5, 0],
+          x: urgency === 'angry' ? [-0.6, 0.6, -0.6] : 0,
           scaleY: squishing ? 0.76 : hovered ? 1.04 : 1,
           scaleX: squishing ? 1.22 : hovered ? 1.02 : 1,
         }}
         transition={{
           y: squishing ? { duration: 0.12 } : { repeat: hovered ? 0 : Infinity, duration: 3.2, ease: 'easeInOut' },
+          x: urgency === 'angry' ? { repeat: Infinity, duration: 0.18, ease: 'linear' } : undefined,
           scaleY: { type: 'spring', stiffness: 420, damping: 16 },
           scaleX: { type: 'spring', stiffness: 420, damping: 16 },
         }}
@@ -237,8 +298,13 @@ export function Mascot({ size = 84, interactive = true, forcedMood, onClick }: M
           }}
         />
 
-        {/* Mascot Blue Dome Body (w: 60, h: 50, r: 22, left: 12, top: 22) */}
-        <div
+        {/* Mascot Dome Body (w: 60, h: 50, r: 22, left: 12, top: 22) */}
+        <motion.div
+          animate={{
+            background: bodyGradient,
+            boxShadow: bodyShadow,
+          }}
+          transition={{ duration: 0.4 }}
           style={{
             position: 'absolute',
             left: 12 * scale,
@@ -246,9 +312,6 @@ export function Mascot({ size = 84, interactive = true, forcedMood, onClick }: M
             width: 60 * scale,
             height: 50 * scale,
             borderRadius: 22 * scale,
-            background: 'linear-gradient(180deg, #0088ff 0%, #ffffff 100%)',
-            boxShadow:
-              '0 6px 20px rgba(0, 136, 255, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.6), 0 0 0 0.5px rgba(255, 255, 255, 0.15)',
             overflow: 'hidden',
           }}
         >
@@ -314,7 +377,7 @@ export function Mascot({ size = 84, interactive = true, forcedMood, onClick }: M
               }}
             />
           </motion.div>
-        </div>
+        </motion.div>
       </motion.div>
     </div>
   );

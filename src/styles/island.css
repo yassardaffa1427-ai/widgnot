@@ -46,6 +46,7 @@
 .pill__time { position: absolute; inset: 0; display: grid; place-items: center; font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .pill__cover { width: 60px; height: 60px; border-radius: 22px; background-size: cover; }
 .pill__eq { position: absolute; left: 35px; bottom: 11px; }
+.pill img, .island img { -webkit-user-drag: none; user-select: none; }
 
 /* ---------- navbar ---------- */
 .navbar { display: flex; align-items: center; justify-content: space-between; padding: 20px 20px 10px; height: 59px; flex: none; cursor: grab; touch-action: none; }

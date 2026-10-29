@@ -4,6 +4,7 @@ import { useUI, type PageId } from '@/store/ui';
 import { useData } from '@/store/data';
 import { useMusic } from '@/store/music';
 import { useTimer } from '@/store/timer';
+import { toKey } from '@/lib/date';
 
 interface Props {
   children?: React.ReactNode;
@@ -57,6 +58,16 @@ export function DesktopShell({ children }: Props) {
           <path d="M9 18V5l12-2v13" />
           <circle cx="6" cy="18" r="3" fill="#fff" />
           <circle cx="18" cy="16" r="3" fill="#fff" />
+        </svg>
+      ),
+    },
+    {
+      id: 'bluetooth' as PageId,
+      name: 'Earphones',
+      color: 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)',
+      icon: (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round">
+          <path d="M7 7l10 10-5 4V3l5 4L7 17" />
         </svg>
       ),
     },
@@ -175,7 +186,36 @@ export function DesktopShell({ children }: Props) {
               border: 'none',
             }}
           >
-            Auto-peek: {autoHide ? 'ON' : 'OFF'}
+            Auto-hide (10s): {autoHide ? 'ON' : 'OFF'}
+          </button>
+
+          {/* Quick deadline demo button */}
+          <button
+            onClick={() => {
+              const d = new Date();
+              d.setMinutes(d.getMinutes() + 10);
+              const hh = String(d.getHours()).padStart(2, '0');
+              const mm = String(d.getMinutes()).padStart(2, '0');
+              const timeStr = hh + ':' + mm;
+              useData.getState().addActivity({
+                title: 'Review Project',
+                date: toKey(new Date()),
+                time: timeStr,
+                deadlineTime: timeStr,
+              });
+            }}
+            title="Klik untuk menambah task deadline 10 menit (tes animasi maskot marah dan bubble chat)"
+            style={{
+              fontSize: 11,
+              padding: '2px 8px',
+              borderRadius: 6,
+              background: 'rgba(255, 51, 75, 0.2)',
+              color: '#ff6b81',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            + Tes Deadline
           </button>
 
           {/* Island Toggle status */}

@@ -58,36 +58,6 @@ export function CalendarWidget() {
             })}
           </motion.div>
         </AnimatePresence>
-
-        {/* Time footer row matching Figma 5:2938 */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            paddingTop: 10,
-            paddingBottom: 4,
-            paddingLeft: 6,
-            paddingRight: 6,
-            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-            marginTop: 6,
-          }}
-        >
-          <span style={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.9)', fontWeight: 500 }}>Time</span>
-          <span
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: '#ffffff',
-              backgroundColor: '#323235',
-              padding: '5px 12px',
-              borderRadius: 20,
-              letterSpacing: '0.02em',
-            }}
-          >
-            09:41 AM
-          </span>
-        </div>
       </div>
 
       <div className="w-head" style={{ paddingTop: 18 }}>

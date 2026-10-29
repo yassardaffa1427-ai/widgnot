@@ -4,6 +4,7 @@ import { DesktopShell } from './components/desktop/DesktopShell';
 import { useTimer } from './store/timer';
 import { useUI } from './store/ui';
 import { useMusic } from './store/music';
+import { useData } from './store/data';
 
 export default function App() {
   const isElectron = Boolean(
@@ -12,6 +13,7 @@ export default function App() {
   );
 
   const { setOpen, goTo } = useUI();
+  const autoHide = useData((s) => s.autoHide);
 
   // satu ticker global supaya timer tetap jalan walau island tertutup
   useEffect(() => {
@@ -58,6 +60,20 @@ export default function App() {
     });
     return unsub;
   }, []);
+
+  // Sync auto-hide toggle dari tray context menu Electron
+  useEffect(() => {
+    if (!window.electronAPI?.onSetAutoHide) return;
+    const unsub = window.electronAPI.onSetAutoHide((val) => {
+      useData.getState().setAutoHide(val);
+    });
+    return unsub;
+  }, []);
+
+  // Sync perubahan state autoHide dari frontend ke tray Electron
+  useEffect(() => {
+    window.electronAPI?.notifyAutoHideChanged?.(autoHide);
+  }, [autoHide]);
 
   if (isElectron) {
     return (

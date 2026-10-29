@@ -26,6 +26,9 @@ interface MusicState {
   btEnabled: boolean;
   btConnected: boolean;
   btName: string;
+  btBattery: number | null;
+  btBatteryR: number | null;
+  btBatteryL: number | null;
   deviceType: 'speaker' | 'airpods';
   isOSMedia?: boolean;
   addFiles: (files: FileList | File[]) => void;
@@ -259,6 +262,9 @@ export const useMusic = create<MusicState>((set, get) => {
     btEnabled: true,
     btConnected: true,
     btName: 'Bluetooth',
+    btBattery: null,
+    btBatteryR: null,
+    btBatteryL: null,
     deviceType: 'airpods',
 
     connectSource: (src: 'spotify' | 'youtube') => {
@@ -378,6 +384,9 @@ export const useMusic = create<MusicState>((set, get) => {
         btEnabled: data.enabled,
         btConnected: data.connected,
         btName: data.deviceName || (data.enabled ? 'Bluetooth On' : 'Bluetooth Off'),
+        btBattery: data.battery ?? null,
+        btBatteryR: data.batteryR ?? data.battery ?? null,
+        btBatteryL: data.batteryL ?? data.battery ?? null,
       });
     },
 
@@ -396,6 +405,9 @@ export const useMusic = create<MusicState>((set, get) => {
             btEnabled: res.enabled,
             btConnected: res.connected,
             btName: res.deviceName || (res.enabled ? 'Bluetooth On' : 'Bluetooth Off'),
+            btBattery: res.battery ?? null,
+            btBatteryR: res.batteryR ?? res.battery ?? null,
+            btBatteryL: res.batteryL ?? res.battery ?? null,
           });
         } catch {
           // ignore

@@ -24,4 +24,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('bluetooth-update', handler);
     return () => ipcRenderer.removeListener('bluetooth-update', handler);
   },
+  onSetAutoHide: (callback) => {
+    const handler = (_, val) => callback(val);
+    ipcRenderer.on('set-auto-hide', handler);
+    return () => ipcRenderer.removeListener('set-auto-hide', handler);
+  },
+  notifyAutoHideChanged: (val) => ipcRenderer.send('auto-hide-changed', val),
 });

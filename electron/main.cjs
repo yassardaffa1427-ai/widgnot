@@ -1,10 +1,12 @@
 const { app, BrowserWindow, screen, ipcMain, globalShortcut, Menu, Tray, nativeImage } = require('electron');
 const path = require('path');
 const { execFile, exec } = require('child_process');
+const fs = require('fs');
 
 let mainWindow = null;
 let tray = null;
 let mediaPollTimer = null;
+let isAutoHideEnabled = true;
 
 function createWindow() {
   const primaryDisplay = screen.getPrimaryDisplay();
@@ -59,6 +61,12 @@ function createWindow() {
     app.quit();
   });
 
+  // Sync auto-hide state from renderer to update tray menu checkbox
+  ipcMain.on('auto-hide-changed', (_, val) => {
+    isAutoHideEnabled = Boolean(val);
+    updateTrayMenu();
+  });
+
   // Windows Media Session controls
   ipcMain.on('toggle-os-media', () => {
     exec('powershell -NoProfile -Command "(New-Object -ComObject Wscript.Shell).SendKeys([char]179)"', { windowsHide: true });
@@ -90,29 +98,13 @@ function createWindow() {
   });
 }
 
-const fs = require('fs');
-
 function getScriptPath() {
   let bundledScriptPath = path.join(__dirname, 'get-media.ps1');
   if (!fs.existsSync(bundledScriptPath) && process.resourcesPath) {
     const unpacked = path.join(process.resourcesPath, 'app.asar.unpacked', 'electron', 'get-media.ps1');
     if (fs.existsSync(unpacked)) bundledScriptPath = unpacked;
   }
-  if (!app.isPackaged && fs.existsSync(bundledScriptPath)) {
-    return bundledScriptPath;
-  }
-  const targetPath = path.join(app.getPath('userData'), 'get-media.ps1');
-  try {
-    if (fs.existsSync(bundledScriptPath)) {
-      fs.mkdirSync(path.dirname(targetPath), { recursive: true });
-      const content = fs.readFileSync(bundledScriptPath, 'utf8');
-      fs.writeFileSync(targetPath, content, 'utf8');
-      return targetPath;
-    }
-  } catch (err) {
-    console.error('Failed to copy get-media.ps1:', err);
-  }
-  return fs.existsSync(targetPath) ? targetPath : bundledScriptPath;
+  return bundledScriptPath;
 }
 
 function getBluetoothScriptPath() {
@@ -121,71 +113,57 @@ function getBluetoothScriptPath() {
     const unpacked = path.join(process.resourcesPath, 'app.asar.unpacked', 'electron', 'bluetooth.ps1');
     if (fs.existsSync(unpacked)) bundledScriptPath = unpacked;
   }
-  if (!app.isPackaged && fs.existsSync(bundledScriptPath)) {
-    return bundledScriptPath;
-  }
-  const targetPath = path.join(app.getPath('userData'), 'bluetooth.ps1');
-  try {
-    if (fs.existsSync(bundledScriptPath)) {
-      fs.mkdirSync(path.dirname(targetPath), { recursive: true });
-      const content = fs.readFileSync(bundledScriptPath, 'utf8');
-      fs.writeFileSync(targetPath, content, 'utf8');
-      return targetPath;
-    }
-  } catch (err) {
-    console.error('Failed to copy bluetooth.ps1:', err);
-  }
-  return fs.existsSync(targetPath) ? targetPath : bundledScriptPath;
+  return bundledScriptPath;
 }
 
 function runBluetoothCommand(action = 'status') {
   return new Promise((resolve) => {
-    if (process.platform !== 'win32') {
-      return resolve({ enabled: false, connected: false, deviceName: '' });
-    }
-    const scriptPath = getBluetoothScriptPath();
+    const script = getBluetoothScriptPath();
     execFile(
-      'powershell.exe',
-      ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', scriptPath, '-Action', action],
-      { windowsHide: true, timeout: 5000 },
-      (err, stdout) => {
-        if (!err && stdout) {
-          try {
-            const str = stdout.trim();
-            const start = str.indexOf('{');
-            const end = str.lastIndexOf('}');
-            if (start !== -1 && end > start) {
-              const data = JSON.parse(str.slice(start, end + 1));
-              return resolve(data);
-            }
-          } catch {}
+      'powershell',
+      ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', script, action],
+      { windowsHide: true },
+      (error, stdout) => {
+        if (error) {
+          resolve({ enabled: false, connected: false });
+          return;
         }
-        resolve({ enabled: false, connected: false, deviceName: '' });
+        try {
+          const str = stdout.trim();
+          const start = str.indexOf('{');
+          const end = str.lastIndexOf('}');
+          if (start !== -1 && end > start) {
+            const data = JSON.parse(str.slice(start, end + 1));
+            resolve(data);
+            return;
+          }
+        } catch {
+          // ignore
+        }
+        resolve({ enabled: false, connected: false });
       }
     );
   });
 }
 
-// Background media & bluetooth tracking for Spotify, YouTube, and laptop players
 function startMediaTracking() {
-  if (process.platform !== 'win32') return;
-
-  const scriptPath = getScriptPath();
   let isPolling = false;
   let tickCount = 0;
 
   const pollMedia = () => {
     if (isPolling) return;
-    if (!mainWindow || mainWindow.isDestroyed()) return;
     isPolling = true;
 
+    const script = getScriptPath();
     execFile(
-      'powershell.exe',
-      ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', scriptPath],
-      { windowsHide: true, timeout: 5000, maxBuffer: 10 * 1024 * 1024 },
-      (err, stdout) => {
+      'powershell',
+      ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', script],
+      { windowsHide: true },
+      (error, stdout) => {
         isPolling = false;
-        if (!err && stdout && mainWindow && !mainWindow.isDestroyed()) {
+        if (error) return;
+
+        if (mainWindow && !mainWindow.isDestroyed()) {
           try {
             const str = stdout.trim();
             const start = str.indexOf('{');
@@ -223,6 +201,40 @@ function startMediaTracking() {
   }, 1200);
 }
 
+function updateTrayMenu() {
+  if (!tray) return;
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'Buka / Tutup Widgnot (Alt+W)',
+      click: () => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('toggle-island');
+        }
+      },
+    },
+    { type: 'separator' },
+    {
+      label: 'Auto-hide saat idle (10 dtk)',
+      type: 'checkbox',
+      checked: isAutoHideEnabled,
+      click: (item) => {
+        isAutoHideEnabled = item.checked;
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('set-auto-hide', isAutoHideEnabled);
+        }
+      },
+    },
+    { type: 'separator' },
+    {
+      label: 'Keluar (Quit)',
+      click: () => {
+        app.quit();
+      },
+    },
+  ]);
+  tray.setContextMenu(contextMenu);
+}
+
 function createTray() {
   try {
     const icoPath = path.join(__dirname, '../build/icon.ico');
@@ -252,24 +264,7 @@ function createTray() {
     }
     tray = new Tray(icon);
     tray.setToolTip('Widgnot — Hidden Island Widget (Alt+W)');
-    const contextMenu = Menu.buildFromTemplate([
-      {
-        label: 'Buka / Tutup Widgnot (Alt+W)',
-        click: () => {
-          if (mainWindow && !mainWindow.isDestroyed()) {
-            mainWindow.webContents.send('toggle-island');
-          }
-        },
-      },
-      { type: 'separator' },
-      {
-        label: 'Keluar (Quit)',
-        click: () => {
-          app.quit();
-        },
-      },
-    ]);
-    tray.setContextMenu(contextMenu);
+    updateTrayMenu();
     tray.on('click', () => {
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('toggle-island');

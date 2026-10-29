@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useMusic } from '@/store/music';
+import { useUI } from '@/store/ui';
 import { fmtMMSS } from '@/lib/date';
 import { AirPods, Bluetooth, Disc, Pause, Play, Skip } from '../ui/Icons';
 import { contentSpring } from '@/lib/motion';
@@ -9,6 +10,7 @@ const fade = { initial: { opacity: 0, y: 6 }, animate: { opacity: 1, y: 0 }, exi
 
 export function MusicWidget() {
   const m = useMusic();
+  const { goTo } = useUI();
   const file = useRef<HTMLInputElement>(null);
   const track = m.hasActiveMedia ? m.tracks[m.index] : null;
   const dur = m.duration || 180;
@@ -57,7 +59,7 @@ export function MusicWidget() {
               <motion.button
                 className="icon-btn"
                 whileTap={{ scale: 0.92 }}
-                onClick={m.toggleBluetooth}
+                onClick={() => goTo('bluetooth')}
                 aria-label={m.btEnabled ? (m.btConnected ? `Bluetooth Terhubung: ${m.btName}` : 'Bluetooth Aktif') : 'Bluetooth Nonaktif (Disable)'}
                 title={m.btEnabled ? (m.btConnected ? `Terhubung: ${m.btName}` : 'Bluetooth Aktif') : 'Bluetooth Nonaktif (Klik untuk menyalakan)'}
                 style={{
@@ -248,7 +250,7 @@ export function MusicWidget() {
               <motion.button
                 className="icon-btn"
                 whileTap={{ scale: 0.92 }}
-                onClick={m.toggleBluetooth}
+                onClick={() => goTo('bluetooth')}
                 aria-label={m.btEnabled ? (m.btConnected ? `Bluetooth Terhubung: ${m.btName}` : 'Bluetooth Aktif') : 'Bluetooth Nonaktif (Disable)'}
                 title={m.btEnabled ? (m.btConnected ? `Terhubung: ${m.btName}` : 'Bluetooth Aktif') : 'Bluetooth Nonaktif (Klik untuk menyalakan)'}
                 style={{

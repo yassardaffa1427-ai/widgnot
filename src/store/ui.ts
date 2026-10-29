@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 
-export type PageId = 'music' | 'note' | 'calendar' | 'timer' | 'todo' | 'drop';
-/** Urutan halaman = urutan page-dot di Figma (6 halaman) */
-export const PAGE_ORDER: PageId[] = ['music', 'note', 'calendar', 'timer', 'todo', 'drop'];
+export type PageId = 'music' | 'bluetooth' | 'note' | 'calendar' | 'timer' | 'todo' | 'drop';
+/** Urutan halaman = urutan page-dot di Figma (7 halaman) */
+export const PAGE_ORDER: PageId[] = ['music', 'bluetooth', 'note', 'calendar', 'timer', 'todo', 'drop'];
 
 interface UIState {
   open: boolean;

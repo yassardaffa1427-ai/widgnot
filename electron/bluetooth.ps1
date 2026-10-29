@@ -30,7 +30,7 @@ try {
 
     $radio = Get-BtRadio
     if (!$radio) {
-        Write-Output '{"enabled":false,"connected":false,"deviceName":""}'
+        Write-Output '{"enabled":false,"connected":false,"deviceName":"","battery":null}'
         exit
     }
 
@@ -58,6 +58,7 @@ try {
     # Check connected audio device (earbuds / headphones)
     $deviceName = ""
     $isConnected = $false
+    $battery = $null
     if ($isEnabled) {
         try {
             $audioDev = Get-PnpDevice -Class AudioEndpoint -ErrorAction SilentlyContinue | Where-Object {
@@ -68,6 +69,29 @@ try {
                 $name = $audioDev.FriendlyName
                 if ($name -match '\((.*?)\)') { $name = $Matches[1] }
                 $deviceName = $name
+
+                # Query battery percentage from corresponding Bluetooth/Hands-Free AG device
+                $hfDevs = Get-PnpDevice -FriendlyName "*$name*Hands-Free AG*" -Status OK -ErrorAction SilentlyContinue
+                if (!$hfDevs) {
+                    $hfDevs = Get-PnpDevice -FriendlyName "*Hands-Free AG*" -Status OK -ErrorAction SilentlyContinue | Where-Object { $_.FriendlyName -like "*$name*" }
+                }
+                foreach ($h in $hfDevs) {
+                    $p = Get-PnpDeviceProperty -InstanceId $h.InstanceId -KeyName '{104EA319-6EE2-4701-BD47-8DDBF425BBE5} 2' -ErrorAction SilentlyContinue
+                    if ($p -and $p.Data -ne $null) {
+                        $battery = [int]$p.Data
+                        break
+                    }
+                }
+                if ($null -eq $battery) {
+                    $btDevs = Get-PnpDevice -Class Bluetooth -Status OK -ErrorAction SilentlyContinue | Where-Object { $_.FriendlyName -like "*$name*" }
+                    foreach ($b in $btDevs) {
+                        $p = Get-PnpDeviceProperty -InstanceId $b.InstanceId -KeyName '{104EA319-6EE2-4701-BD47-8DDBF425BBE5} 2' -ErrorAction SilentlyContinue
+                        if ($p -and $p.Data -ne $null) {
+                            $battery = [int]$p.Data
+                            break
+                        }
+                    }
+                }
             }
         } catch {}
     }
@@ -76,8 +100,9 @@ try {
         enabled = $isEnabled
         connected = $isConnected
         deviceName = if ($deviceName) { $deviceName } else { if ($isEnabled) { "Bluetooth" } else { "Bluetooth Off" } }
+        battery = $battery
     }
     Write-Output ($res | ConvertTo-Json -Compress)
 } catch {
-    Write-Output '{"enabled":false,"connected":false,"deviceName":""}'
+    Write-Output '{"enabled":false,"connected":false,"deviceName":"","battery":null}'
 }
