@@ -155,6 +155,10 @@ fn set_interactive(state: tauri::State<AppState>, app: tauri::AppHandle, interac
         if let Ok(hwnd) = window.hwnd() {
             apply_window_interactive(hwnd.0 as isize, &window, interactive);
         }
+        #[cfg(not(target_os = "windows"))]
+        {
+            let _ = window.set_ignore_cursor_events(!interactive);
+        }
     }
     Ok(())
 }
@@ -168,43 +172,73 @@ fn close_app(app: tauri::AppHandle) {
 fn toggle_os_media() {
     #[cfg(target_os = "windows")]
     send_key(0xB3); // VK_MEDIA_PLAY_PAUSE
+    #[cfg(target_os = "macos")]
+    {
+        let _ = std::process::Command::new("osascript")
+            .args(["-e", "tell application \"Spotify\" to playpause"])
+            .spawn();
+    }
 }
 
 #[tauri::command]
 fn next_os_media() {
     #[cfg(target_os = "windows")]
     send_key(0xB0); // VK_MEDIA_NEXT_TRACK
+    #[cfg(target_os = "macos")]
+    {
+        let _ = std::process::Command::new("osascript")
+            .args(["-e", "tell application \"Spotify\" to next track"])
+            .spawn();
+    }
 }
 
 #[tauri::command]
 fn prev_os_media() {
     #[cfg(target_os = "windows")]
     send_key(0xB1); // VK_MEDIA_PREV_TRACK
+    #[cfg(target_os = "macos")]
+    {
+        let _ = std::process::Command::new("osascript")
+            .args(["-e", "tell application \"Spotify\" to previous track"])
+            .spawn();
+    }
 }
 
 #[tauri::command]
 fn get_bluetooth_status() -> serde_json::Value {
-    let (_, bt_script) = ensure_scripts();
-    if let Some(out) = run_ps_script(&bt_script, &["-Action", "status"]) {
-        if let Some(val) = extract_json(&out) {
-            return val;
+    #[cfg(target_os = "windows")]
+    {
+        let (_, bt_script) = ensure_scripts();
+        if let Some(out) = run_ps_script(&bt_script, &["-Action", "status"]) {
+            if let Some(val) = extract_json(&out) {
+                return val;
+            }
         }
     }
-    serde_json::json!({ "enabled": false, "connected": false, "deviceName": "" })
+    serde_json::json!({ "enabled": true, "connected": false, "deviceName": "Bluetooth" })
 }
 
 #[tauri::command]
 fn toggle_bluetooth(app: tauri::AppHandle) -> serde_json::Value {
-    let (_, bt_script) = ensure_scripts();
-    let res = if let Some(out) = run_ps_script(&bt_script, &["-Action", "toggle"]) {
-        extract_json(&out).unwrap_or_else(|| {
+    #[cfg(target_os = "windows")]
+    {
+        let (_, bt_script) = ensure_scripts();
+        let res = if let Some(out) = run_ps_script(&bt_script, &["-Action", "toggle"]) {
+            extract_json(&out).unwrap_or_else(|| {
+                serde_json::json!({ "enabled": false, "connected": false, "deviceName": "" })
+            })
+        } else {
             serde_json::json!({ "enabled": false, "connected": false, "deviceName": "" })
-        })
-    } else {
-        serde_json::json!({ "enabled": false, "connected": false, "deviceName": "" })
-    };
-    let _ = app.emit("bluetooth-update", &res);
-    res
+        };
+        let _ = app.emit("bluetooth-update", &res);
+        return res;
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let res = serde_json::json!({ "enabled": true, "connected": false, "deviceName": "Bluetooth" });
+        let _ = app.emit("bluetooth-update", &res);
+        res
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -292,7 +326,8 @@ pub fn run() {
                 }
             }
 
-            // Start cursor monitoring thread for seamless click-through overlay
+            // Start cursor monitoring thread for seamless click-through overlay (Windows)
+            #[cfg(target_os = "windows")]
             let app_cursor = app.handle().clone();
             let bounds_cursor = bounds_arc.clone();
             let is_interactive_cursor = is_interactive_arc.clone();
@@ -346,9 +381,11 @@ pub fn run() {
                 }
             });
 
-            // Start background media & bluetooth polling thread
-            let app_handle = app.handle().clone();
-            std::thread::spawn(move || {
+            // Start background media & bluetooth polling thread (Windows)
+            #[cfg(target_os = "windows")]
+            {
+                let app_handle = app.handle().clone();
+                std::thread::spawn(move || {
                 let (media_script, bt_script) = ensure_scripts();
                 let mut tick_count: u32 = 0;
 
@@ -381,6 +418,7 @@ pub fn run() {
                     std::thread::sleep(std::time::Duration::from_millis(2000));
                 }
             });
+            }
 
             Ok(())
         })

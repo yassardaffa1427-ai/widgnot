@@ -2,7 +2,7 @@
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Widgnot",
   "version": "2.2.1",
-  "identifier": "com.widgnot.app",
+  "identifier": "com.widgnot.desktop",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
