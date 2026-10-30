@@ -4,9 +4,12 @@ use tauri::{
     Emitter, Manager,
 };
 
+#[cfg(target_os = "windows")]
 const GET_MEDIA_SCRIPT: &str = include_str!("../scripts/get-media.ps1");
+#[cfg(target_os = "windows")]
 const BLUETOOTH_SCRIPT: &str = include_str!("../scripts/bluetooth.ps1");
 
+#[cfg(target_os = "windows")]
 fn get_scripts_dir() -> std::path::PathBuf {
     let mut path = std::env::temp_dir();
     path.push("widgnot_scripts");
@@ -14,6 +17,7 @@ fn get_scripts_dir() -> std::path::PathBuf {
     path
 }
 
+#[cfg(target_os = "windows")]
 fn ensure_scripts() -> (std::path::PathBuf, std::path::PathBuf) {
     let dir = get_scripts_dir();
     let media_path = dir.join("get-media.ps1");
@@ -23,6 +27,7 @@ fn ensure_scripts() -> (std::path::PathBuf, std::path::PathBuf) {
     (media_path, bt_path)
 }
 
+#[cfg(target_os = "windows")]
 fn run_ps_script(script_path: &std::path::Path, args: &[&str]) -> Option<String> {
     let mut cmd = std::process::Command::new("powershell.exe");
     cmd.arg("-NoProfile")
@@ -50,6 +55,7 @@ fn run_ps_script(script_path: &std::path::Path, args: &[&str]) -> Option<String>
     }
 }
 
+#[cfg(target_os = "windows")]
 fn extract_json(raw: &str) -> Option<serde_json::Value> {
     let start = raw.find('{')?;
     let end = raw.rfind('}')?;
@@ -328,58 +334,59 @@ pub fn run() {
 
             // Start cursor monitoring thread for seamless click-through overlay (Windows)
             #[cfg(target_os = "windows")]
-            let app_cursor = app.handle().clone();
-            let bounds_cursor = bounds_arc.clone();
-            let is_interactive_cursor = is_interactive_arc.clone();
-            std::thread::spawn(move || {
-                loop {
-                    std::thread::sleep(std::time::Duration::from_millis(16));
+            {
+                let app_cursor = app.handle().clone();
+                let bounds_cursor = bounds_arc.clone();
+                let is_interactive_cursor = is_interactive_arc.clone();
+                std::thread::spawn(move || {
+                    loop {
+                        std::thread::sleep(std::time::Duration::from_millis(16));
 
-                    if let Some(main_window) = app_cursor.get_webview_window("main") {
-                        let bounds = {
-                            if let Ok(b) = bounds_cursor.lock() {
-                                *b
-                            } else {
-                                continue;
-                            }
-                        };
-
-                        #[cfg(target_os = "windows")]
-                        if let Ok(hwnd) = main_window.hwnd() {
-                            let should_be_interactive = if bounds.dragging {
-                                true
-                            } else {
-                                let mut pt = POINT { x: 0, y: 0 };
-                                let ok = unsafe { GetCursorPos(&mut pt) };
-                                if ok != 0 {
-                                    let _ = unsafe { ScreenToClient(hwnd.0 as isize, &mut pt) };
-                                    let scale = main_window.scale_factor().unwrap_or(1.0);
-                                    let cx = pt.x as f64 / scale;
-                                    let cy = pt.y as f64 / scale;
-
-                                    let pad_top = if bounds.open { 14.0 } else { 190.0 };
-                                    let pad_bottom = 14.0;
-                                    let pad_left = if bounds.open { 14.0 } else { 340.0 };
-                                    let pad_right = if bounds.open { 14.0 } else { 340.0 };
-
-                                    cx >= (bounds.x - pad_left)
-                                        && cx <= (bounds.x + bounds.w + pad_right)
-                                        && cy >= (bounds.y - pad_top)
-                                        && cy <= (bounds.y + bounds.h + pad_bottom)
+                        if let Some(main_window) = app_cursor.get_webview_window("main") {
+                            let bounds = {
+                                if let Ok(b) = bounds_cursor.lock() {
+                                    *b
                                 } else {
-                                    true
+                                    continue;
                                 }
                             };
 
-                            let current_interactive = is_interactive_cursor.load(std::sync::atomic::Ordering::SeqCst);
-                            if should_be_interactive != current_interactive {
-                                is_interactive_cursor.store(should_be_interactive, std::sync::atomic::Ordering::SeqCst);
-                                apply_window_interactive(hwnd.0 as isize, &main_window, should_be_interactive);
+                            if let Ok(hwnd) = main_window.hwnd() {
+                                let should_be_interactive = if bounds.dragging {
+                                    true
+                                } else {
+                                    let mut pt = POINT { x: 0, y: 0 };
+                                    let ok = unsafe { GetCursorPos(&mut pt) };
+                                    if ok != 0 {
+                                        let _ = unsafe { ScreenToClient(hwnd.0 as isize, &mut pt) };
+                                        let scale = main_window.scale_factor().unwrap_or(1.0);
+                                        let cx = pt.x as f64 / scale;
+                                        let cy = pt.y as f64 / scale;
+
+                                        let pad_top = if bounds.open { 14.0 } else { 190.0 };
+                                        let pad_bottom = 14.0;
+                                        let pad_left = if bounds.open { 14.0 } else { 340.0 };
+                                        let pad_right = if bounds.open { 14.0 } else { 340.0 };
+
+                                        cx >= (bounds.x - pad_left)
+                                            && cx <= (bounds.x + bounds.w + pad_right)
+                                            && cy >= (bounds.y - pad_top)
+                                            && cy <= (bounds.y + bounds.h + pad_bottom)
+                                    } else {
+                                        true
+                                    }
+                                };
+
+                                let current_interactive = is_interactive_cursor.load(std::sync::atomic::Ordering::SeqCst);
+                                if should_be_interactive != current_interactive {
+                                    is_interactive_cursor.store(should_be_interactive, std::sync::atomic::Ordering::SeqCst);
+                                    apply_window_interactive(hwnd.0 as isize, &main_window, should_be_interactive);
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
+            }
 
             // Start background media & bluetooth polling thread (Windows)
             #[cfg(target_os = "windows")]
