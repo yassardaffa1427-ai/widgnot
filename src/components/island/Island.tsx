@@ -274,11 +274,12 @@ const H_AI_WIDE = Math.round(410 * 1.45); // tinggi maximize AI (+45% = 595px)
                   <>
                     <Navbar controls={controls} onDragBegin={() => { dragged.current = false; }} />
                     <div className="body">
-                      <div className="body__scroll">
+                      <div className="body__scroll" style={page === 'ai' ? { display: 'flex', flexDirection: 'column', height: '100%' } : undefined}>
                         <AnimatePresence initial={false} mode="wait" custom={dir}>
                           <motion.div
                             key={page} custom={dir} variants={pageV} initial="enter" animate="center" exit="exit"
                             transition={contentSpring}
+                            style={page === 'ai' ? { flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100%' } : undefined}
                           >
                             <Widget />
                           </motion.div>

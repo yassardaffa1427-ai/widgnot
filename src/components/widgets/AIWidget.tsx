@@ -155,7 +155,9 @@ export function AIWidget() {
         flexDirection: 'column',
         gap: 10,
         padding: '20px',
-        // Figma: container 416x410
+        flex: 1,
+        height: '100%',
+        boxSizing: 'border-box',
       }}
     >
       {/* ── Header: AI icon + datetime placeholder + close (Figma 147:2340) ── */}
@@ -327,9 +329,7 @@ export function AIWidget() {
           flexDirection: 'column',
           gap: 10,
           minHeight: 120,
-          maxHeight: isWide ? 460 : 230,
           paddingRight: 2,
-          transition: 'max-height 0.3s ease',
           userSelect: 'text',
           WebkitUserSelect: 'text',
         }}
@@ -395,7 +395,8 @@ export function AIWidget() {
           border: '1px solid rgba(255,255,255,0.09)',
           borderRadius: 16,
           padding: '4px 6px 4px 12px',
-          marginTop: 2,
+          marginTop: 'auto',
+          flexShrink: 0,
         }}
       >
         <input
