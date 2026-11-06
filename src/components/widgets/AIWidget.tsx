@@ -170,10 +170,10 @@ export function AIWidget() {
           gap: 8,
         }}
       >
-        {/* Left: Widgnot mascot avatar + title + model label */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {/* Left: Widgnot mascot (pure mascot, no outer rounded box) + title + model label */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <AIMascotAvatar
-            size={42}
+            size={38}
             isGenerating={isGenerating}
             hasError={Boolean(error)}
           />
