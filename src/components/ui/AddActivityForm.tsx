@@ -108,7 +108,7 @@ export function AddActivityForm({
           {/* Row 1: Tanggal */}
           <div className="act-form__row">
             <div className="act-form__row-left">
-              <CalendarDays size={18} style={{ color: '#a3a3a7' }} />
+              <CalendarDays size={18} style={{ color: 'var(--secondary-label)' }} />
               <span className="act-form__row-text">Tanggal</span>
             </div>
             <div
@@ -140,7 +140,7 @@ export function AddActivityForm({
           {/* Row 2: Waktu mulai */}
           <div className="act-form__row">
             <div className="act-form__row-left">
-              <Clock size={18} style={{ color: '#a3a3a7' }} />
+              <Clock size={18} style={{ color: 'var(--secondary-label)' }} />
               <span className="act-form__row-text">Waktu mulai</span>
             </div>
             <div
@@ -172,7 +172,7 @@ export function AddActivityForm({
           {/* Row 3: Waktu deadline (Figma 26:3408) */}
           <div className="act-form__row">
             <div className="act-form__row-left">
-              <Clock size={18} style={{ color: '#a3a3a7' }} />
+              <Clock size={18} style={{ color: 'var(--secondary-label)' }} />
               <span className="act-form__row-text">waktu deadline</span>
             </div>
             <div

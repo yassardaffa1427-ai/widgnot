@@ -45,7 +45,7 @@ export function BluetoothWidget() {
           display: 'flex',
           alignItems: 'center',
           gap: 27,
-          padding: '8px 4px',
+          padding: '0 4px',
           width: '100%',
         }}
       >
@@ -131,14 +131,14 @@ export function BluetoothWidget() {
           </div>
         </motion.button>
 
-        {/* Text Details (Figma 102:2179) */}
-        <div style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {/* Text Details (Apple HIG Battery Detail) */}
+        <div style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
           <span
             title={deviceName}
             style={{
-              fontSize: 16,
-              fontWeight: 400,
-              color: 'rgba(255, 255, 255, 0.45)',
+              fontSize: 14,
+              fontWeight: 500,
+              color: 'var(--secondary-label)',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
@@ -149,25 +149,26 @@ export function BluetoothWidget() {
             {deviceName}
           </span>
 
-          {/* Battery Status: L di kiri, R di kanan (Sesuai Figma Node 102:2245 & 102:2186) */}
+          {/* Battery Status: L di kiri, R di kanan (Apple Tabular Figures) */}
           <div
             style={{
               display: 'flex',
               alignItems: 'baseline',
               gap: 18,
-              fontSize: 32,
+              fontSize: 30,
               fontWeight: 700,
-              color: '#ffffff',
+              fontVariantNumeric: 'tabular-nums',
+              color: 'var(--label)',
               letterSpacing: '-0.02em',
               lineHeight: 1.15,
             }}
           >
             <span>
-              <span style={{ fontSize: 26, fontWeight: 700, opacity: 0.9 }}>L: </span>
+              <span style={{ fontSize: 22, fontWeight: 600, color: 'var(--secondary-label)' }}>L </span>
               {battL}
             </span>
             <span>
-              <span style={{ fontSize: 26, fontWeight: 700, opacity: 0.9 }}>R: </span>
+              <span style={{ fontSize: 22, fontWeight: 600, color: 'var(--secondary-label)' }}>R </span>
               {battR}
             </span>
           </div>

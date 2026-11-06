@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "stageshow": {
+      "source": "benjitaylor/skills",
+      "sourceType": "github",
+      "skillPath": "stageshow/SKILL.md",
+      "computedHash": "ba928f2526ec0a7da76a0a7fe0f6b10d23b5a1bf1a292fd7f1001f4597521ad8"
+    }
+  }
+}

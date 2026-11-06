@@ -14,7 +14,7 @@ export function Pager() {
           <motion.button
             key={p} role="tab" aria-selected={p === page} aria-label={p} className="pager__dot"
             onClick={() => goTo(p)}
-            animate={{ width: p === page ? 42 : 5, backgroundColor: p === page ? '#ffffff' : '#585858' }}
+            animate={{ width: p === page ? 38 : 5, backgroundColor: p === page ? '#ffffff' : 'rgba(255, 255, 255, 0.28)' }}
             transition={contentSpring}
           />
         ))}

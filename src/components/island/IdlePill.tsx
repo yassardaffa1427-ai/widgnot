@@ -241,6 +241,7 @@ export function IdlePill({ isLeftDock = false }: IdlePillProps) {
                       borderRadius: 10,
                       backgroundColor: 'rgba(255, 255, 255, 0.08)',
                       border: '1px solid rgba(255, 255, 255, 0.12)',
+                      boxShadow: 'inset 0 1px 0.5px rgba(255, 255, 255, 0.15)',
                       color: 'rgba(255, 255, 255, 0.85)',
                       fontSize: 12,
                       fontWeight: 600,
@@ -275,6 +276,7 @@ export function IdlePill({ isLeftDock = false }: IdlePillProps) {
                         deadlineAlert.urgency === 'angry'
                           ? '1px solid rgba(255, 51, 75, 0.55)'
                           : '1px solid rgba(255, 170, 0, 0.55)',
+                      boxShadow: 'inset 0 1px 0.5px rgba(255, 255, 255, 0.2)',
                       color: '#ffffff',
                       fontSize: 12,
                       fontWeight: 600,
@@ -296,8 +298,9 @@ export function IdlePill({ isLeftDock = false }: IdlePillProps) {
                     style={{
                       padding: '7px 10px',
                       borderRadius: 10,
-                      backgroundColor: 'rgba(0, 198, 255, 0.15)',
-                      border: '1px solid rgba(0, 198, 255, 0.35)',
+                      backgroundColor: 'rgba(0, 198, 255, 0.18)',
+                      border: '1px solid rgba(0, 198, 255, 0.40)',
+                      boxShadow: 'inset 0 1px 0.5px rgba(255, 255, 255, 0.25)',
                       color: '#00c6ff',
                       fontSize: 12,
                       fontWeight: 600,
@@ -422,9 +425,9 @@ export function IdlePill({ isLeftDock = false }: IdlePillProps) {
               pointerEvents: 'none',
             }}
           >
-            {tracks[index].thumbnail ? (
+            {tracks[index].thumbnail || '/figma-assets/music-cover-idle.png' ? (
               <img
-                src={tracks[index].thumbnail}
+                src={tracks[index].thumbnail || '/figma-assets/music-cover-idle.png'}
                 alt={tracks[index].name}
                 draggable={false}
                 onDragStart={(e) => e.preventDefault()}
@@ -447,7 +450,7 @@ export function IdlePill({ isLeftDock = false }: IdlePillProps) {
             )}
           </div>
 
-          {/* Equalizer bars 3 bar dengan border hitam di bawah */}
+          {/* Equalizer bars 3 bar mengikuti style di samping baterai (tanpa border hitam, solid pill) */}
           <div
             style={{
               position: 'absolute',
@@ -457,10 +460,10 @@ export function IdlePill({ isLeftDock = false }: IdlePillProps) {
               transform: 'translateX(-50%)',
               pointerEvents: 'none',
               userSelect: 'none',
-              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))',
+              filter: 'drop-shadow(0 1px 3px rgba(0, 0, 0, 0.75))',
             }}
           >
-            <EqBars active bordered size={18} />
+            <EqBars active size={24} />
           </div>
         </div>
       ) : (

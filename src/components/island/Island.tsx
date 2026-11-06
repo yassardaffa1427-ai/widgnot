@@ -13,6 +13,7 @@ import { IdlePill } from './IdlePill';
 import { TimerMinimize } from './TimerMinimize';
 import { MusicWidget } from '../widgets/MusicWidget';
 import { BluetoothWidget } from '../widgets/BluetoothWidget';
+import { AIWidget } from '../widgets/AIWidget';
 import { NoteWidget } from '../widgets/NoteWidget';
 import { CalendarWidget } from '../widgets/CalendarWidget';
 import { TimerWidget } from '../widgets/TimerWidget';
@@ -22,6 +23,7 @@ import { DropWidget } from '../widgets/DropWidget';
 const WIDGETS: Record<PageId, () => JSX.Element> = {
   music: MusicWidget,
   bluetooth: BluetoothWidget,
+  ai: AIWidget,
   note: NoteWidget,
   calendar: CalendarWidget,
   timer: TimerWidget,
@@ -46,13 +48,14 @@ const pageV = {
 };
 
 export const FIGMA_HEIGHTS: Record<PageId, number> = {
-  music: 315,
-  bluetooth: 227,
-  note: 385,
-  calendar: 630,
-  timer: 232,
-  todo: 365,
-  drop: 359,
+  music: 338,
+  bluetooth: 236,
+  ai: 410,
+  note: 405,
+  calendar: 650,
+  timer: 246,
+  todo: 385,
+  drop: 380,
 };
 
 export function Island() {
@@ -75,8 +78,11 @@ export function Island() {
   const isTimerMin = open && timerMinimized && page === 'timer';
   const isDropCompact = open && page === 'drop' && dropCompact;
 
+const W_AI_WIDE = Math.round(416 * 1.35); // lebar maximize AI (+35% = 562px)
+const H_AI_WIDE = Math.round(410 * 1.45); // tinggi maximize AI (+45% = 595px)
+
   const targetW = open
-    ? (isTimerMin ? W_TIMER_MIN : (page === 'note' && wide ? W_WIDE : W))
+    ? (isTimerMin ? W_TIMER_MIN : (page === 'note' && wide ? W_WIDE : page === 'ai' && wide ? W_AI_WIDE : W))
     : IDLE;
   const targetH = open
     ? (isTimerMin
@@ -85,6 +91,8 @@ export function Island() {
         ? 245
         : page === 'note' && wide
         ? 436
+        : page === 'ai' && wide
+        ? H_AI_WIDE
         : page === 'todo' && addingAct
         ? 785
         : FIGMA_HEIGHTS[page])
@@ -257,7 +265,7 @@ export function Island() {
                 className="panel"
                 style={{ width: '100%', height: '100%', transformOrigin: origin }}
                 initial={{ opacity: 0, scale: 0.9, filter: 'blur(12px)' }}
-                animate={{ opacity: 1, scale: 1, filter: 'blur(0px)', transition: { ...contentSpring, delay: reduce ? 0 : 0.07 } }}
+                animate={{ opacity: 1, scale: 1, filter: 'none', transition: { ...contentSpring, delay: reduce ? 0 : 0.07 } }}
                 exit={{ opacity: 0, scale: 0.9, filter: 'blur(12px)', transition: { duration: 0.14 } }}
               >
                 {isTimerMin ? (
@@ -285,7 +293,7 @@ export function Island() {
               <motion.button
                 key="pill" className="pill" aria-label="Buka Widgnot"
                 initial={{ opacity: 0, scale: 0.6, filter: 'blur(8px)' }}
-                animate={{ opacity: 1, scale: 1, filter: 'blur(0px)', transition: { ...contentSpring, delay: reduce ? 0 : 0.05 } }}
+                animate={{ opacity: 1, scale: 1, filter: 'none', transition: { ...contentSpring, delay: reduce ? 0 : 0.05 } }}
                 exit={{ opacity: 0, scale: 0.6, filter: 'blur(8px)', transition: { duration: 0.12 } }}
                 onPointerDown={(e) => {
                   startPos.current = { x: e.clientX, y: e.clientY };

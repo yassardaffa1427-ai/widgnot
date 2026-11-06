@@ -63,34 +63,12 @@ export function TodoWidget() {
               className="todo__past"
               onClick={() => setShowPast((v) => !v)}
               aria-expanded={showPast}
-              style={{
-                background: '#242424',
-                padding: '8px 12px',
-                borderRadius: 10,
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
             >
               <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <i
-                  className="todo__badge"
-                  style={{
-                    fontStyle: 'normal',
-                    backgroundColor: '#0088ff',
-                    width: 20,
-                    height: 20,
-                    borderRadius: 14,
-                    display: 'grid',
-                    placeItems: 'center',
-                    fontSize: 11,
-                    fontWeight: 600,
-                  }}
-                >
+                <i className="todo__badge" style={{ fontStyle: 'normal' }}>
                   {past.length}
                 </i>
-                <span style={{ fontSize: 14, color: '#ffffff' }}>
+                <span style={{ fontSize: 14, color: 'var(--label)', fontWeight: 500 }}>
                   incomplete past task{past.length > 1 ? 's' : ''}
                 </span>
               </span>

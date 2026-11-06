@@ -124,7 +124,7 @@ export function NoteWidget() {
                   }}
                   aria-label="Hapus catatan"
                   title="Hapus catatan"
-                  style={{ color: '#fe2d28', transition: 'transform 0.2s', padding: 4 }}
+                  style={{ color: 'var(--system-red)', transition: 'transform 0.2s', padding: 4 }}
                 >
                   <Trash size={20} />
                 </button>
@@ -133,31 +133,19 @@ export function NoteWidget() {
                   className="chip"
                   onClick={exportTxt}
                   aria-label="Ekspor catatan ke file txt"
-                  style={{
-                    backgroundColor: '#3d3d3d',
-                    borderRadius: 10,
-                    padding: '6px 12px',
-                    fontSize: 13,
-                    fontWeight: 600,
-                  }}
                 >
                   export txt
                 </button>
 
-                {/* Save button added matching Figma 5:2935 */}
+                {/* Save button — Apple HIG Primary Action */}
                 <button
-                  className="chip"
+                  className="btn-primary"
                   onClick={handleSave}
                   aria-label="Simpan catatan"
                   style={{
-                    backgroundColor: '#3d3d3d',
-                    color: '#ffffff',
-                    borderRadius: 10,
-                    padding: '6px 14px',
+                    padding: '6px 16px',
                     fontSize: 13,
                     fontWeight: 600,
-                    cursor: 'pointer',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
                   }}
                 >
                   Save
@@ -207,9 +195,9 @@ export function NoteWidget() {
                         exit={{ opacity: 0, scale: 0.94 }}
                         transition={contentSpring}
                         style={{
-                          backgroundColor: '#252525',
-                          border: '1px solid #474747',
-                          borderRadius: 10,
+                          backgroundColor: 'var(--fill)',
+                          border: '0.5px solid var(--separator)',
+                          borderRadius: 'var(--radius-card)',
                           padding: '12px 14px',
                           display: 'flex',
                           flexDirection: 'column',
@@ -219,14 +207,14 @@ export function NoteWidget() {
                         }}
                         onClick={() => setActiveId(n.id)}
                       >
-                        {/* Card Header matching Figma 38:1193 */}
+                        {/* Card Header matching Apple Notes */}
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <p
                             style={{
                               margin: 0,
                               fontSize: 16,
-                              fontWeight: 700,
-                              color: '#ffffff',
+                              fontWeight: 600,
+                              color: 'var(--label)',
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
                               whiteSpace: 'nowrap',
@@ -237,7 +225,7 @@ export function NoteWidget() {
                           </p>
 
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span style={{ fontSize: 13, color: 'rgba(255, 255, 255, 0.45)', whiteSpace: 'nowrap' }}>
+                            <span style={{ fontSize: 12, color: 'var(--secondary-label)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
                               {dateStr}
                             </span>
 
@@ -249,7 +237,7 @@ export function NoteWidget() {
                               }}
                               aria-label="Buka dan edit catatan"
                               title="Buka / Edit"
-                              style={{ color: '#ffffff', padding: 2 }}
+                              style={{ color: 'var(--label)', padding: 2 }}
                             >
                               <Maximize size={18} />
                             </button>
@@ -262,7 +250,7 @@ export function NoteWidget() {
                               }}
                               aria-label="Hapus catatan"
                               title="Hapus"
-                              style={{ color: '#fe2d28', padding: 2 }}
+                              style={{ color: 'var(--system-red)', padding: 2 }}
                             >
                               <Trash size={18} />
                             </button>
@@ -274,7 +262,7 @@ export function NoteWidget() {
                           style={{
                             margin: 0,
                             fontSize: 13,
-                            color: 'rgba(255, 255, 255, 0.72)',
+                            color: 'var(--secondary-label)',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap',

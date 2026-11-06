@@ -4019,7 +4019,7 @@ dependencies = [
 
 [[package]]
 name = "widgnot"
-version = "0.1.0"
+version = "2.2.3"
 dependencies = [
  "log",
  "serde",

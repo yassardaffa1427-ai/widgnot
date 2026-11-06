@@ -1,25 +1,89 @@
-/* Design tokens — diambil dari Figma "widgnot" (frame `all`, node 5:2939) */
+/* Design tokens — Apple Human Interface Guidelines (HIG) & Liquid Glass System */
 :root {
-  --bg: #1b1b1b;          /* island */
-  --surface: #242424;     /* kartu todo / baris */
-  --surface-2: #3d3d3d;   /* tombol, chip */
-  --dot: #585858;         /* page dot nonaktif */
-  --text: #ffffff;
-  --muted: #999999;
-  --faint: rgba(255, 255, 255, 0.35);
-  --blue: #0088ff;        /* tanggal terpilih, badge */
-  --red: #ff2121;         /* weekend */
-  --rec: #fe2d28;         /* timer / play */
-  --green: #21ff54;       /* baterai, todo selesai */
-  --green-soft: rgba(33, 255, 84, 0.2);
+  /* Functional Layer: Liquid Glass Material (Apple HIG 2025/2026) */
+  --glass-material: rgba(24, 24, 28, 0.82);
+  --glass-blur: blur(28px) saturate(180%);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.12);
+  --glass-border-highlight: 1px solid rgba(255, 255, 255, 0.24);
+  --glass-shadow: 0 20px 48px -8px rgba(0, 0, 0, 0.70), 0 0 0 0.5px rgba(255, 255, 255, 0.08);
 
+  /* Semantic Island Surface */
+  --bg: var(--glass-material);
+  --bg-blur: var(--glass-blur);
+
+  /* Content Layer: Apple Standard Materials & Fills */
+  --fill: rgba(255, 255, 255, 0.10);             /* Kartu utama / baris aktif */
+  --fill-hover: rgba(255, 255, 255, 0.15);
+  --secondary-fill: rgba(255, 255, 255, 0.06);   /* Tombol sekunder / chip / input */
+  --secondary-fill-hover: rgba(255, 255, 255, 0.10);
+  --tertiary-fill: rgba(255, 255, 255, 0.035);  /* Background baris sangat halus */
+  --separator: rgba(255, 255, 255, 0.09);       /* Hairline divider standar Apple */
+
+  /* Legacy aliases for backwards compatibility */
+  --surface: var(--fill);
+  --surface-hover: var(--fill-hover);
+  --surface-2: var(--secondary-fill);
+  --surface-2-hover: var(--secondary-fill-hover);
+  --dot: rgba(255, 255, 255, 0.28);
+
+  /* Content Layer: Apple Vibrant Typography */
+  --label: #ffffff;                              /* Teks primer (kontras tertinggi 100%) */
+  --secondary-label: rgba(255, 255, 255, 0.70);  /* Teks sekunder (70%) */
+  --tertiary-label: rgba(255, 255, 255, 0.45);   /* Keterangan / placeholder (45%) */
+  --quaternary-label: rgba(255, 255, 255, 0.26); /* Ikon nonaktif / border pudar */
+
+  --text: var(--label);
+  --muted: var(--secondary-label);
+  --faint: var(--tertiary-label);
+
+  /* Apple Semantic System Colors (Dark Mode Calibrated) */
+  --system-blue: #0a84ff;
+  --system-green: #30d158;
+  --system-red: #ff453a;
+  --system-orange: #ff9f0a;
+  --system-cyan: #64d2ff;
+
+  --blue: var(--system-blue);
+  --green: var(--system-green);
+  --green-soft: rgba(48, 209, 88, 0.22);
+  --red: var(--system-red);
+  --rec: var(--system-red);
+
+  /* Radii & Sizes (Apple Continuous Squircles) */
   --radius-island: 34px;
-  --radius-card: 10px;
+  --radius-card: 14px;
   --radius-chip: 20px;
+  --radius-button: 10px;
 
   --island-idle: 84px;
   --island-w: 416px;
   --island-w-wide: 584px;
 
-  --font: 'Inter Tight', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Typography: Apple System Font Hierarchy */
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Inter Tight', system-ui, sans-serif;
+}
+
+/* Aksesibilitas HIG: Reduced Transparency */
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --glass-material: #1c1c1e;
+    --glass-blur: none;
+    --bg: #1c1c1e;
+    --fill: #2c2c2e;
+    --fill-hover: #3a3a3c;
+    --secondary-fill: #323236;
+    --secondary-fill-hover: #404044;
+    --glass-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.12);
+  }
+}
+
+/* Aksesibilitas HIG: Increased Contrast */
+@media (prefers-contrast: more) {
+  :root {
+    --glass-border: 1px solid rgba(255, 255, 255, 0.35);
+    --glass-border-highlight: 1px solid rgba(255, 255, 255, 0.50);
+    --separator: rgba(255, 255, 255, 0.20);
+    --secondary-label: rgba(255, 255, 255, 0.88);
+    --tertiary-label: rgba(255, 255, 255, 0.65);
+  }
 }

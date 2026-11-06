@@ -55,31 +55,30 @@ export function MusicWidget() {
                 <span style={{ fontSize: 13, color: 'rgba(255, 255, 255, 0.7)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 3, display: 'block', width: '100%' }}>name producer</span>
               </div>
 
-              {/* Bluetooth / Earbuds Button (Figma 5:2933) */}
+              {/* Bluetooth / Earbuds Button (Apple HIG Accessory Control) */}
               <motion.button
                 className="icon-btn"
                 whileTap={{ scale: 0.92 }}
                 onClick={() => goTo('bluetooth')}
-                aria-label={m.btEnabled ? (m.btConnected ? `Bluetooth Terhubung: ${m.btName}` : 'Bluetooth Aktif') : 'Bluetooth Nonaktif (Disable)'}
-                title={m.btEnabled ? (m.btConnected ? `Terhubung: ${m.btName}` : 'Bluetooth Aktif') : 'Bluetooth Nonaktif (Klik untuk menyalakan)'}
+                aria-label={m.btEnabled ? (m.btConnected ? `Bluetooth Terhubung: ${m.btName}` : 'Bluetooth Aktif') : 'Bluetooth Nonaktif'}
+                title={m.btEnabled ? (m.btConnected ? `Terhubung: ${m.btName}` : 'Bluetooth Aktif') : 'Bluetooth Nonaktif'}
                 style={{
                   marginLeft: 'auto',
                   flexShrink: 0,
-                  width: 44,
-                  height: 44,
+                  width: 40,
+                  height: 40,
                   borderRadius: '50%',
-                  backgroundColor: m.btEnabled ? (m.btConnected ? '#0088ff' : '#28282c') : 'rgba(255, 255, 255, 0.05)',
-                  color: m.btEnabled ? '#ffffff' : 'rgba(255, 255, 255, 0.25)',
-                  border: m.btEnabled ? 'none' : '1px solid rgba(255, 255, 255, 0.08)',
-                  boxShadow: m.btEnabled && m.btConnected ? '0 4px 14px rgba(0, 136, 255, 0.45)' : 'none',
+                  backgroundColor: m.btEnabled ? (m.btConnected ? 'rgba(10, 132, 255, 0.16)' : 'var(--secondary-fill)') : 'var(--tertiary-fill)',
+                  color: m.btEnabled ? (m.btConnected ? 'var(--system-blue)' : 'var(--label)') : 'var(--quaternary-label)',
+                  border: m.btEnabled ? (m.btConnected ? '0.5px solid rgba(10, 132, 255, 0.35)' : '0.5px solid var(--separator)') : '0.5px solid var(--separator)',
                   display: 'grid',
                   placeItems: 'center',
                   cursor: 'pointer',
-                  opacity: m.btEnabled ? 1 : 0.35,
-                  transition: 'all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                  opacity: m.btEnabled ? 1 : 0.45,
+                  transition: 'background 0.2s, color 0.2s, border-color 0.2s',
                 }}
               >
-                {m.btConnected ? <AirPods size={22} /> : <Bluetooth size={22} />}
+                {m.btConnected ? <AirPods size={20} /> : <Bluetooth size={20} />}
               </motion.button>
             </div>
 
@@ -173,9 +172,9 @@ export function MusicWidget() {
                 animate={{ scale: m.playing ? 1 : 0.95 }}
                 transition={contentSpring}
               >
-                {track.thumbnail ? (
+                {track.thumbnail || '/figma-assets/music-cover-player.png' ? (
                   <img
-                    src={track.thumbnail}
+                    src={track.thumbnail || '/figma-assets/music-cover-player.png'}
                     alt={track.name}
                     style={{
                       width: '100%',
@@ -246,31 +245,30 @@ export function MusicWidget() {
                 </span>
               </div>
 
-              {/* Real Windows Bluetooth Earbuds Button (Figma Node 5:2927) - Aligned Right */}
+              {/* Real Windows Bluetooth Earbuds Button (Apple HIG Accessory Control) */}
               <motion.button
                 className="icon-btn"
                 whileTap={{ scale: 0.92 }}
                 onClick={() => goTo('bluetooth')}
-                aria-label={m.btEnabled ? (m.btConnected ? `Bluetooth Terhubung: ${m.btName}` : 'Bluetooth Aktif') : 'Bluetooth Nonaktif (Disable)'}
-                title={m.btEnabled ? (m.btConnected ? `Terhubung: ${m.btName}` : 'Bluetooth Aktif') : 'Bluetooth Nonaktif (Klik untuk menyalakan)'}
+                aria-label={m.btEnabled ? (m.btConnected ? `Bluetooth Terhubung: ${m.btName}` : 'Bluetooth Aktif') : 'Bluetooth Nonaktif'}
+                title={m.btEnabled ? (m.btConnected ? `Terhubung: ${m.btName}` : 'Bluetooth Aktif') : 'Bluetooth Nonaktif'}
                 style={{
                   marginLeft: 'auto',
                   flexShrink: 0,
-                  width: 44,
-                  height: 44,
+                  width: 40,
+                  height: 40,
                   borderRadius: '50%',
-                  backgroundColor: m.btEnabled ? (m.btConnected ? '#0088ff' : '#28282c') : 'rgba(255, 255, 255, 0.05)',
-                  color: m.btEnabled ? '#ffffff' : 'rgba(255, 255, 255, 0.25)',
-                  border: m.btEnabled ? 'none' : '1px solid rgba(255, 255, 255, 0.08)',
-                  boxShadow: m.btEnabled && m.btConnected ? '0 4px 14px rgba(0, 136, 255, 0.45)' : 'none',
+                  backgroundColor: m.btEnabled ? (m.btConnected ? 'rgba(10, 132, 255, 0.16)' : 'var(--secondary-fill)') : 'var(--tertiary-fill)',
+                  color: m.btEnabled ? (m.btConnected ? 'var(--system-blue)' : 'var(--label)') : 'var(--quaternary-label)',
+                  border: m.btEnabled ? (m.btConnected ? '0.5px solid rgba(10, 132, 255, 0.35)' : '0.5px solid var(--separator)') : '0.5px solid var(--separator)',
                   display: 'grid',
                   placeItems: 'center',
                   cursor: 'pointer',
-                  opacity: m.btEnabled ? 1 : 0.35,
-                  transition: 'all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                  opacity: m.btEnabled ? 1 : 0.45,
+                  transition: 'background 0.2s, color 0.2s, border-color 0.2s',
                 }}
               >
-                {m.btConnected ? <AirPods size={22} /> : <Bluetooth size={22} />}
+                {m.btConnected ? <AirPods size={20} /> : <Bluetooth size={20} />}
               </motion.button>
             </div>
 

@@ -3,7 +3,7 @@ import { fmtMMSS } from '@/lib/date';
 import { Ring } from '../ui/Ring';
 import { AddSquare, Cup, Lock, MinusSquare, Pause, Play, Restart, Stopwatch } from '../ui/Icons';
 
-export const TIMER_COLOR = { focus: '#fe2d28', break: '#21c8ff' } as const;
+export const TIMER_COLOR = { focus: '#ff453a', break: '#64d2ff' } as const;
 
 export function TimerWidget() {
   const t = useTimer();
@@ -12,7 +12,7 @@ export function TimerWidget() {
 
   return (
     <section className="widget">
-      <div className="timer" style={{ paddingTop: 6 }}>
+      <div className="timer">
         <span style={{ position: 'relative', width: 84, height: 84, display: 'grid', placeItems: 'center', flex: 'none', filter: `drop-shadow(0 0 10px ${color}66)` }}>
           <Ring size={84} stroke={10} progress={progress} color={color} track={`${color}33`} />
           <span style={{ position: 'absolute' }}><Stopwatch size={44} /></span>

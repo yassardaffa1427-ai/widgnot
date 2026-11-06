@@ -5,6 +5,7 @@ import { useData } from '@/store/data';
 import { useMusic } from '@/store/music';
 import { useTimer } from '@/store/timer';
 import { toKey } from '@/lib/date';
+import { WidgnotTrailer } from '../trailer/WidgnotTrailer';
 
 interface Props {
   children?: React.ReactNode;
@@ -16,6 +17,7 @@ export function DesktopShell({ children }: Props) {
   const { playing } = useMusic();
   const timer = useTimer();
 
+  const [showTrailer, setShowTrailer] = useState(false);
   const [timeStr, setTimeStr] = useState('');
   const [dateStr, setDateStr] = useState('');
 
@@ -172,7 +174,30 @@ export function DesktopShell({ children }: Props) {
         </div>
 
         {/* Trailing Items */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {/* Watch Trailer Showcase Button */}
+          <button
+            onClick={() => setShowTrailer(true)}
+            title="Tonton trailer interaktif demo fitur Widgnot"
+            style={{
+              fontSize: 12,
+              padding: '3px 12px',
+              borderRadius: 20,
+              background: 'linear-gradient(135deg, rgba(10, 132, 255, 0.35) 0%, rgba(100, 210, 255, 0.25) 100%)',
+              border: '0.5px solid rgba(100, 210, 255, 0.45)',
+              color: '#ffffff',
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              cursor: 'pointer',
+              boxShadow: '0 2px 10px rgba(10, 132, 255, 0.3)',
+            }}
+          >
+            <span>🎬</span>
+            <span>Trailer</span>
+          </button>
+
           {/* Auto-hide toggle badge */}
           <button
             onClick={() => setAutoHide(!autoHide)}
@@ -362,6 +387,28 @@ export function DesktopShell({ children }: Props) {
             >
               Tutup: <kbd style={{ background: '#333', padding: '2px 6px', borderRadius: 4 }}>Esc</kbd>
             </span>
+
+            <button
+              onClick={() => setShowTrailer(true)}
+              style={{
+                fontSize: 13,
+                color: '#ffffff',
+                backgroundColor: 'var(--system-blue)',
+                padding: '6px 16px',
+                borderRadius: 8,
+                border: 'none',
+                fontWeight: 600,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 7,
+                cursor: 'pointer',
+                boxShadow: '0 4px 14px rgba(10, 132, 255, 0.35)',
+                transition: 'transform 0.15s, filter 0.15s',
+              }}
+            >
+              <span>▶</span>
+              <span>Watch Trailer &amp; Showcase</span>
+            </button>
           </div>
         </motion.div>
       </main>
@@ -455,6 +502,9 @@ export function DesktopShell({ children }: Props) {
 
       {/* Widgnot Island Component */}
       {children}
+
+      {/* Widgnot Product Trailer & Cinema Showcase */}
+      {showTrailer && <WidgnotTrailer onClose={() => setShowTrailer(false)} />}
     </div>
   );
 }

@@ -20,7 +20,7 @@ export function BatteryRing() {
     return () => { mgr?.removeEventListener('levelchange', sync); mgr?.removeEventListener('chargingchange', sync); };
   }, []);
 
-  const color = b.level <= 0.2 ? '#ff3b30' : '#21ff54';
+  const color = b.level <= 0.2 ? 'var(--system-red, #ff453a)' : 'var(--system-green, #30d158)';
   return (
     <span style={{ position: 'relative', width: 29, height: 29, display: 'inline-grid', placeItems: 'center' }}>
       <Ring size={29} stroke={4} progress={b.level} color={color} track="rgba(255,255,255,0.12)" />
