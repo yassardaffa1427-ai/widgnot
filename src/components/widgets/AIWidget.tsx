@@ -25,6 +25,17 @@ function StreamDot() {
   );
 }
 
+/* ─── Image Icon (Google Lens / Attach) ─────────────────────────────────── */
+function ImageIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" />
+      <path d="M21 15L16 10L5 21" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 /* ─── Send Icon ─────────────────────────────────────────────────────────────── */
 function SendIcon() {
   return (
@@ -118,14 +129,17 @@ export function AIWidget() {
   const { setWide: setIslandWide } = useUI();
 
   const [input, setInput] = useState('');
+  const [attachedImage, setAttachedImage] = useState<string | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
   const [showKeyPanel, setShowKeyPanel] = useState(!apiKey);
   const [keyDraft, setKeyDraft] = useState(apiKey);
   const chatRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auto scroll
   useEffect(() => {
     chatRef.current?.scrollTo({ top: chatRef.current.scrollHeight, behavior: 'smooth' });
-  }, [messages, isGenerating]);
+  }, [messages, isGenerating, attachedImage]);
 
   // Maximize: island menjadi 35% lebih lebar
   const handleMaximize = useCallback(() => {
@@ -139,18 +153,101 @@ export function AIWidget() {
     if (keyDraft.trim()) setShowKeyPanel(false);
   };
 
+  const processImageFile = (file: File) => {
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      if (dataUrl) {
+        setAttachedImage(dataUrl);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const loadExternalImage = (url: string) => {
+    if (url.startsWith('data:image/')) {
+      setAttachedImage(url);
+      return;
+    }
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth || 400;
+      canvas.height = img.naturalHeight || 400;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        setAttachedImage(canvas.toDataURL('image/png'));
+      }
+    };
+    img.src = url;
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = Array.from(e.dataTransfer.files).find((f) => f.type.startsWith('image/'));
+      if (file) {
+        processImageFile(file);
+        return;
+      }
+    }
+
+    const html = e.dataTransfer.getData('text/html');
+    if (html) {
+      const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+      if (match && match[1]) {
+        loadExternalImage(match[1]);
+        return;
+      }
+    }
+
+    const uri = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
+    if (uri && (uri.startsWith('http://') || uri.startsWith('https://') || uri.startsWith('data:image/'))) {
+      loadExternalImage(uri);
+    }
+  };
+
+  // Support paste (Ctrl+V) langsung gambar ke AI Chat
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.startsWith('image/')) {
+          const file = items[i].getAsFile();
+          if (file) {
+            processImageFile(file);
+            e.preventDefault();
+            break;
+          }
+        }
+      }
+    };
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, []);
+
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
     const val = input.trim();
-    if (!val || isGenerating) return;
+    if ((!val && !attachedImage) || isGenerating) return;
+    const imgToSend = attachedImage;
     setInput('');
-    void sendMessage(val);
+    setAttachedImage(null);
+    void sendMessage(val, imgToSend);
   };
 
   return (
     <section
       className="widget"
       style={{
+        position: 'relative',
         display: 'flex',
         flexDirection: 'column',
         gap: 10,
@@ -159,7 +256,72 @@ export function AIWidget() {
         height: '100%',
         boxSizing: 'border-box',
       }}
+      onDragOver={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragOver(true);
+      }}
+      onDragLeave={() => setIsDragOver(false)}
+      onDrop={handleDrop}
     >
+      {/* Hidden file input untuk pilih gambar */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) processImageFile(file);
+          e.target.value = '';
+        }}
+      />
+
+      {/* Drag Over Visual Overlay */}
+      <AnimatePresence>
+        {isDragOver && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.97 }}
+            style={{
+              position: 'absolute',
+              inset: 10,
+              borderRadius: 24,
+              backgroundColor: 'rgba(10, 132, 255, 0.28)',
+              border: '2px dashed #0a84ff',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 10,
+              zIndex: 30,
+              pointerEvents: 'none',
+              boxShadow: '0 0 32px rgba(10, 132, 255, 0.45)',
+            }}
+          >
+            <div
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: '50%',
+                background: '#0a84ff',
+                color: '#fff',
+                display: 'grid',
+                placeItems: 'center',
+                boxShadow: '0 4px 14px rgba(10, 132, 255, 0.6)',
+              }}
+            >
+              <ImageIcon size={26} />
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#ffffff', letterSpacing: '-0.01em' }}>
+              Lepas gambar untuk bertanya ke AI
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* ── Header: AI icon + datetime placeholder + close (Figma 147:2340) ── */}
       <div
         style={{
@@ -368,6 +530,23 @@ export function AIWidget() {
                   cursor: 'text',
                 }}
               >
+                {/* Gambar Lampiran jika ada */}
+                {m.image && (
+                  <div style={{ marginBottom: 6, borderRadius: 12, overflow: 'hidden', maxWidth: '100%' }}>
+                    <img
+                      src={m.image}
+                      alt="Lampiran"
+                      style={{
+                        display: 'block',
+                        maxWidth: '100%',
+                        maxHeight: 180,
+                        objectFit: 'contain',
+                        borderRadius: 12,
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                      }}
+                    />
+                  </div>
+                )}
                 <span
                   style={{
                     whiteSpace: 'pre-wrap',
@@ -383,6 +562,75 @@ export function AIWidget() {
           );
         })}
       </div>
+
+      {/* ── Lampiran Gambar Pratinjau (Google Lens Mode) ── */}
+      <AnimatePresence>
+        {attachedImage && (
+          <motion.div
+            initial={{ opacity: 0, y: 6, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.96 }}
+            transition={contentSpring}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '6px 10px',
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(10, 132, 255, 0.35)',
+              borderRadius: 14,
+              marginBottom: 4,
+              boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)',
+              flexShrink: 0,
+            }}
+          >
+            <img
+              src={attachedImage}
+              alt="Pratinjau Lampiran"
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 8,
+                objectFit: 'cover',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                flexShrink: 0,
+              }}
+            />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 11.5, fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                Mode Analisis Gambar (Google Lens)
+              </div>
+              <div style={{ fontSize: 10, color: 'var(--tertiary-label)' }}>
+                Tanya apa saja tentang gambar ini
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setAttachedImage(null)}
+              aria-label="Hapus lampiran gambar"
+              title="Hapus gambar"
+              style={{
+                width: 22,
+                height: 22,
+                borderRadius: '50%',
+                background: 'rgba(255, 255, 255, 0.12)',
+                border: 'none',
+                color: '#fff',
+                cursor: 'pointer',
+                display: 'grid',
+                placeItems: 'center',
+                fontSize: 11,
+                flexShrink: 0,
+                transition: 'background 0.15s ease',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 33, 33, 0.5)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)'; }}
+            >
+              ✕
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Input Bar — Figma 147:2392 ── */}
       <form
@@ -403,7 +651,7 @@ export function AIWidget() {
           type="text"
           value={input}
           onChange={e => setInput(e.target.value)}
-          placeholder="Tanya AI atau ketik sesuatu…"
+          placeholder={attachedImage ? 'Tanya tentang gambar ini…' : 'Tanya AI atau ketik sesuatu…'}
           style={{
             flex: 1,
             background: 'transparent',
@@ -414,25 +662,51 @@ export function AIWidget() {
             padding: '6px 0',
           }}
         />
+
+        {/* Image Attachment Button (Google Lens / Attach Image) */}
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          aria-label="Pilih gambar untuk dianalisis (Google Lens)"
+          title="Pilih gambar atau drag & drop gambar ke chat"
+          style={{
+            width: 30,
+            height: 30,
+            borderRadius: 10,
+            border: 'none',
+            background: attachedImage ? 'rgba(10, 132, 255, 0.22)' : 'transparent',
+            color: attachedImage ? '#0a84ff' : 'var(--tertiary-label)',
+            cursor: 'pointer',
+            display: 'grid',
+            placeItems: 'center',
+            transition: 'all 0.15s ease',
+            flexShrink: 0,
+          }}
+          onPointerDown={e => { e.currentTarget.style.transform = 'scale(0.92)'; }}
+          onPointerUp={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+        >
+          <ImageIcon size={18} />
+        </button>
+
         {/* Send button 32×32 borderRadius 10px — Figma 147:2400 */}
         <button
           type="submit"
-          disabled={!input.trim() || isGenerating}
+          disabled={(!input.trim() && !attachedImage) || isGenerating}
           aria-label="Kirim pesan"
           style={{
             width: 32,
             height: 32,
             borderRadius: 10,
             border: 'none',
-            background: input.trim() && !isGenerating ? 'var(--system-blue)' : 'transparent',
-            color: input.trim() && !isGenerating ? '#fff' : 'var(--quaternary-label)',
-            cursor: input.trim() && !isGenerating ? 'pointer' : 'default',
+            background: (input.trim() || attachedImage) && !isGenerating ? 'var(--system-blue)' : 'transparent',
+            color: (input.trim() || attachedImage) && !isGenerating ? '#fff' : 'var(--quaternary-label)',
+            cursor: (input.trim() || attachedImage) && !isGenerating ? 'pointer' : 'default',
             display: 'grid',
             placeItems: 'center',
             transition: 'background 0.15s ease, transform 0.1s ease',
             flexShrink: 0,
           }}
-          onPointerDown={e => { if (input.trim()) e.currentTarget.style.transform = 'scale(0.92)'; }}
+          onPointerDown={e => { if (input.trim() || attachedImage) e.currentTarget.style.transform = 'scale(0.92)'; }}
           onPointerUp={e => { e.currentTarget.style.transform = 'scale(1)'; }}
         >
           <SendIcon />

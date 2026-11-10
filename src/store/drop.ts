@@ -23,6 +23,48 @@ interface DropState {
   toggleCompact: () => void;
 }
 
+/** Helper to convert image data URL to a real File object */
+export function dataUrlToFile(dataUrl: string, filename = 'image.png'): File {
+  const parts = dataUrl.split(',');
+  const mimeMatch = parts[0].match(/:(.*?);/);
+  const mime = mimeMatch ? mimeMatch[1] : 'image/png';
+  const bstr = atob(parts[1] || '');
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new File([u8arr], filename, { type: mime });
+}
+
+/** Helper to setup rich dataTransfer payload when dragging image out of Widgnot */
+export function setupImageDragOut(e: React.DragEvent, item: DropItem) {
+  const filename = item.name.includes('.') ? item.name : `${item.name}.png`;
+  const mime = item.dataUrl.split(';')[0].split(':')[1] || 'image/png';
+
+  try {
+    const file = dataUrlToFile(item.dataUrl, filename);
+    e.dataTransfer.items.add(file);
+  } catch (err) {
+    console.warn('Could not add file to dataTransfer.items:', err);
+  }
+
+  try {
+    e.dataTransfer.setData('DownloadURL', `${mime}:${filename}:${item.dataUrl}`);
+  } catch {}
+
+  try {
+    e.dataTransfer.setData('text/html', `<img src="${item.dataUrl}" alt="${filename}">`);
+  } catch {}
+
+  try {
+    e.dataTransfer.setData('text/uri-list', item.dataUrl);
+    e.dataTransfer.setData('text/plain', item.dataUrl);
+  } catch {}
+
+  e.dataTransfer.effectAllowed = 'copyMove';
+}
+
 /** Helper to copy image data URL to OS clipboard as PNG blob */
 export async function copyDropItemToClipboard(dataUrl: string): Promise<boolean> {
   try {

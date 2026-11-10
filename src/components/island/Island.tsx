@@ -296,6 +296,13 @@ const H_AI_WIDE = Math.round(410 * 1.45); // tinggi maximize AI (+45% = 595px)
                 initial={{ opacity: 0, scale: 0.6, filter: 'blur(8px)' }}
                 animate={{ opacity: 1, scale: 1, filter: 'none', transition: { ...contentSpring, delay: reduce ? 0 : 0.05 } }}
                 exit={{ opacity: 0, scale: 0.6, filter: 'blur(8px)', transition: { duration: 0.12 } }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  if (!open) {
+                    goTo('drop');
+                    setOpen(true);
+                  }
+                }}
                 onPointerDown={(e) => {
                   startPos.current = { x: e.clientX, y: e.clientY };
                   dragged.current = false;

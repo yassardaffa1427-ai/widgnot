@@ -5,6 +5,7 @@ export interface AIMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  image?: string; // Data URL lampiran gambar
   timestamp: number;
   isStreaming?: boolean;
 }
@@ -24,7 +25,7 @@ export interface AIState {
   setApiKey: (key: string) => void;
   setWide: (v: boolean) => void;
   clearMessages: () => void;
-  sendMessage: (prompt: string) => Promise<void>;
+  sendMessage: (prompt: string, image?: string | null) => Promise<void>;
 }
 
 /** Deteksi provider dari API key */
@@ -47,6 +48,14 @@ function getModelLabel(provider: AIProvider): string {
     case 'mistral': return 'mistral-small';
     default: return 'AI Model';
   }
+}
+
+function parseDataUrl(dataUrl: string) {
+  const parts = dataUrl.split(',');
+  const mimeMatch = parts[0].match(/:(.*?);/);
+  const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+  const base64 = parts[1] || '';
+  return { mimeType, base64 };
 }
 
 interface EndpointConfig {
@@ -128,9 +137,9 @@ export const useAI = create<AIState>()(
           error: null,
         }),
 
-      sendMessage: async (userPrompt: string) => {
+      sendMessage: async (userPrompt: string, image?: string | null) => {
         const text = userPrompt.trim();
-        if (!text) return;
+        if (!text && !image) return;
 
         const { apiKey, provider, modelLabel } = get();
 
@@ -139,10 +148,13 @@ export const useAI = create<AIState>()(
           return;
         }
 
+        const promptText = text || (image ? 'Jelaskan dan analisis gambar ini secara detail seperti Google Lens.' : '');
+
         const userMsg: AIMessage = {
           id: `u-${Date.now()}`,
           role: 'user',
-          content: text,
+          content: text || (image ? 'Analisis gambar ini' : ''),
+          image: image || undefined,
           timestamp: Date.now(),
         };
 
@@ -150,7 +162,7 @@ export const useAI = create<AIState>()(
         set((s) => ({
           messages: [...s.messages, userMsg, { id: aId, role: 'assistant', content: '', timestamp: Date.now(), isStreaming: true }],
           isGenerating: true,
-          statusText: 'Mengetik…',
+          statusText: image ? 'Menganalisis gambar…' : 'Mengetik…',
           error: null,
         }));
 
@@ -163,10 +175,26 @@ export const useAI = create<AIState>()(
           let acc = '';
 
           if (endpoint.type === 'gemini') {
+            const currentParts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
+            if (image) {
+              const { mimeType, base64 } = parseDataUrl(image);
+              currentParts.push({ inlineData: { mimeType, data: base64 } });
+            }
+            currentParts.push({ text: promptText });
+
             const contents = [
-              ...history.map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.content }] })),
-              { role: 'user', parts: [{ text }] },
+              ...history.map(m => {
+                const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
+                if (m.image) {
+                  const { mimeType, base64 } = parseDataUrl(m.image);
+                  parts.push({ inlineData: { mimeType, data: base64 } });
+                }
+                parts.push({ text: m.content });
+                return { role: m.role === 'user' ? 'user' : 'model', parts };
+              }),
+              { role: 'user', parts: currentParts },
             ];
+
             const res = await fetch(endpoint.url, {
               method: 'POST',
               headers: endpoint.headers,
@@ -197,11 +225,30 @@ export const useAI = create<AIState>()(
               }
             }
           } else if (endpoint.type === 'openai') {
+            const currentUserContent: string | Array<{ type: string; text?: string; image_url?: { url: string } }> = image
+              ? [
+                  { type: 'text', text: promptText },
+                  { type: 'image_url', image_url: { url: image } },
+                ]
+              : promptText;
+
             const msgs = [
-              { role: 'system', content: 'Kamu adalah asisten AI yang membantu dan ramah.' },
-              ...history.map(m => ({ role: m.role, content: m.content })),
-              { role: 'user', content: text },
+              { role: 'system', content: 'Kamu adalah asisten AI multimodal cerdas di Widgnot. Kamu bisa menganalisis gambar dengan detail, mengenali objek, teks, konteks, dan menjawab pertanyaan pengguna tentang gambar layaknya Google Lens.' },
+              ...history.map(m => {
+                if (m.image && m.role === 'user') {
+                  return {
+                    role: m.role,
+                    content: [
+                      { type: 'text', text: m.content },
+                      { type: 'image_url', image_url: { url: m.image } },
+                    ],
+                  };
+                }
+                return { role: m.role, content: m.content };
+              }),
+              { role: 'user', content: currentUserContent },
             ];
+
             const res = await fetch(endpoint.url, {
               method: 'POST',
               headers: endpoint.headers,
@@ -232,6 +279,37 @@ export const useAI = create<AIState>()(
               }
             }
           } else if (endpoint.type === 'anthropic') {
+            const currentUserContent: string | Array<{ type: string; text?: string; source?: { type: string; media_type: string; data: string } }> = image
+              ? [
+                  {
+                    type: 'image',
+                    source: {
+                      type: 'base64',
+                      media_type: parseDataUrl(image).mimeType,
+                      data: parseDataUrl(image).base64,
+                    },
+                  },
+                  { type: 'text', text: promptText },
+                ]
+              : promptText;
+
+            const msgs = [
+              ...history.map(m => {
+                if (m.image && m.role === 'user') {
+                  const { mimeType, base64 } = parseDataUrl(m.image);
+                  return {
+                    role: m.role,
+                    content: [
+                      { type: 'image', source: { type: 'base64', media_type: mimeType, data: base64 } },
+                      { type: 'text', text: m.content },
+                    ],
+                  };
+                }
+                return { role: m.role, content: m.content };
+              }),
+              { role: 'user', content: currentUserContent },
+            ];
+
             const res = await fetch(endpoint.url, {
               method: 'POST',
               headers: endpoint.headers,
@@ -239,7 +317,7 @@ export const useAI = create<AIState>()(
                 model: modelLabel,
                 max_tokens: 2048,
                 stream: true,
-                messages: [...history.map(m => ({ role: m.role, content: m.content })), { role: 'user', content: text }],
+                messages: msgs,
               }),
             });
             if (!res.ok) {

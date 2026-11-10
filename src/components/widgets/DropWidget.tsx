@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { useDrop, copyDropItemToClipboard, type DropItem } from '@/store/drop';
+import { useDrop, copyDropItemToClipboard, setupImageDragOut, type DropItem } from '@/store/drop';
 import { useUI } from '@/store/ui';
 import { contentSpring } from '@/lib/motion';
 import { TrayArrowDown, DiagonalResize, DiagonalCollapse, Check, Trash } from '../ui/Icons';
@@ -74,6 +74,56 @@ export function DropWidget() {
     reader.readAsDataURL(file);
   };
 
+  const processImageUrl = (url: string) => {
+    if (url.startsWith('data:image/')) {
+      const img = new Image();
+      img.onload = () => {
+        const id = addItem({
+          dataUrl: url,
+          name: `Image ${new Date().toLocaleTimeString()}`,
+          width: img.naturalWidth,
+          height: img.naturalHeight,
+          sizeBytes: Math.round(url.length * 0.75),
+        });
+        void copyDropItemToClipboard(url).then((ok) => {
+          if (ok) {
+            setCopiedId(id);
+            setTimeout(() => setCopiedId(null), 2000);
+          }
+        });
+      };
+      img.src = url;
+      return;
+    }
+
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth || 400;
+      canvas.height = img.naturalHeight || 400;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        const dataUrl = canvas.toDataURL('image/png');
+        const id = addItem({
+          dataUrl,
+          name: `Web Image ${new Date().toLocaleTimeString()}`,
+          width: img.naturalWidth,
+          height: img.naturalHeight,
+          sizeBytes: Math.round(dataUrl.length * 0.75),
+        });
+        void copyDropItemToClipboard(dataUrl).then((ok) => {
+          if (ok) {
+            setCopiedId(id);
+            setTimeout(() => setCopiedId(null), 2000);
+          }
+        });
+      }
+    };
+    img.src = url;
+  };
+
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     Array.from(e.target.files).forEach((f) => {
@@ -98,19 +148,36 @@ export function DropWidget() {
     e.stopPropagation();
     setIsDragOver(false);
 
+    // 1. Cek file image lokal dari explorer / desktop
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       Array.from(e.dataTransfer.files).forEach((f) => {
         if (f.type.startsWith('image/')) {
           processFile(f);
         }
       });
+      return;
+    }
+
+    // 2. Cek jika image di-drag dari web browser tab
+    const html = e.dataTransfer.getData('text/html');
+    if (html) {
+      const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+      if (match && match[1]) {
+        processImageUrl(match[1]);
+        return;
+      }
+    }
+
+    const uri = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
+    if (uri && (uri.startsWith('http://') || uri.startsWith('https://') || uri.startsWith('data:image/'))) {
+      processImageUrl(uri);
     }
   };
 
   return (
     <section
       className="widget"
-      style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
+      style={{ position: 'relative', display: 'flex', flexDirection: 'column', height: '100%' }}
       onDragOver={(e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -119,6 +186,51 @@ export function DropWidget() {
       onDragLeave={() => setIsDragOver(false)}
       onDrop={handleDrop}
     >
+      {/* Drag Over Visual Overlay */}
+      <AnimatePresence>
+        {isDragOver && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.97 }}
+            style={{
+              position: 'absolute',
+              inset: 8,
+              borderRadius: 24,
+              backgroundColor: 'rgba(10, 132, 255, 0.28)',
+              border: '2px dashed #0a84ff',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 10,
+              zIndex: 10,
+              pointerEvents: 'none',
+              boxShadow: '0 0 30px rgba(10, 132, 255, 0.45)',
+            }}
+          >
+            <div
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: '50%',
+                background: '#0a84ff',
+                color: '#fff',
+                display: 'grid',
+                placeItems: 'center',
+                boxShadow: '0 4px 14px rgba(10, 132, 255, 0.6)',
+              }}
+            >
+              <TrayArrowDown size={30} />
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#ffffff', letterSpacing: '-0.01em' }}>
+              Lepas gambar di sini
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <input
         ref={fileInputRef}
         type="file"
@@ -278,27 +390,34 @@ export function DropWidget() {
                       boxShadow: isSelected
                         ? '0 0 0 2.5px #0088ff, 0 6px 20px rgba(0, 136, 255, 0.35)'
                         : '0 4px 14px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.08)',
-                      cursor: 'pointer',
+                      cursor: 'grab',
                       flexShrink: 0,
                       transition: 'box-shadow 0.2s',
                     }}
                   >
-                    <img
-                      src={it.dataUrl}
-                      alt={it.name}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        display: 'block',
-                        borderRadius: 18,
-                      }}
+                    <div
                       draggable
-                      onDragStart={(e) => {
-                        e.dataTransfer.setData('text/plain', it.name);
-                        e.dataTransfer.setData('text/uri-list', it.dataUrl);
+                      onDragStart={(e: React.DragEvent) => {
+                        setupImageDragOut(e, it);
                       }}
-                    />
+                      title="Klik untuk copy, atau tarik (drag) keluar ke aplikasi lain"
+                      style={{ width: '100%', height: '100%' }}
+                    >
+                      <img
+                        src={it.dataUrl}
+                        alt={it.name}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          display: 'block',
+                          borderRadius: 18,
+                          pointerEvents: 'none',
+                          userSelect: 'none',
+                        }}
+                        draggable={false}
+                      />
+                    </div>
 
                     {/* Copied Feedback Badge */}
                     <AnimatePresence>
