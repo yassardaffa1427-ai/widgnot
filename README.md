@@ -23,8 +23,10 @@
 
 ---
 
-## ✦ Fitur Utama (v2.2.1)
+## ✦ Fitur Utama (v2.2.3)
 
+- **🤖 AI Chat Assistant & Multimodal (Google Lens)**: Asisten AI pintar bawaan yang mendukung Gemini, OpenAI, Claude, dan Qwen. Mendukung analisis gambar (Google Lens Mode) lewat tombol lampirkan foto, drag & drop gambar, atau `Ctrl + V`. Jawaban AI dapat diseleksi (*selectable*) untuk dicopy dengan mudah, layout responsive stick to bottom saat maximized, serta maskot Widgnot interaktif.
+- **📋 Drag once, paste later (Drag In & Drag Out)**: Menampung kumpulan gambar dengan mudah. Cukup seret (*drag*) gambar dari browser atau file explorer dan lepas di Widgnot, serta tarik (*drag out*) gambar keluar ke Figma, Discord, atau folder komputer. Menyeret gambar ke pill idle otomatis membuka widget Drop.
 - **🖱️ Freely Draggable & Click to Open**: Island dapat di-drag dan ditempatkan bebas di posisi mana pun di monitor Anda (sangat pas diletakkan di bawah Notch MacBook atau tepi layar laptop), serta dapat dibuka secara instan cukup dengan satu klik mouse pada pill saat idle (tanpa wajib menekan shortcut).
 - **🎧 Halaman Bluetooth Earphones (Figma 102:2169)**: Halaman khusus yang menampilkan status koneksi earphone/TWS/AirPods lengkap dengan persentase baterai riil (L di kiri & R di kanan) dan visual SVG Circular Progress Ring cyan.
 - **⏰ Task Mulai & Deadline (Figma 26:3408)**: Formulir tambah aktivitas kini mendukung pengaturan waktu mulai dan batas waktu pengerjaan (*deadline*) secara terpisah.
@@ -33,7 +35,6 @@
   - Bubble chat interaktif dengan kalimat manusiawi muncul setiap 60 detik di atas maskot idle.
   - Klik pada bubble membuka menu aksi: **Matikan** (bisu pengingat), **1 Menit Lagi** (*snooze*), atau **Buka** (langsung ke To-Do).
 - **👻 10-Second Idle Auto-Hide & Auto-Peek**: Pill otomatis sembunyi separuh ke tepi layar laptop setelah 10 detik tanpa aktivitas, dan otomatis mengintip (*peek*) keluar saat mouse didekatkan ke tepi.
-- **📋 Drag once, paste later (Halaman ke-7)**: Fitur clipboard visual untuk menampung banyak gambar sekaligus (lewat `Ctrl + V` / `Cmd + V` atau *drag & drop*). Pengguna dapat memilih dan menyalin gambar satu per satu untuk di-paste kembali di platform manapun seperti Figma, Discord, WhatsApp, atau Slack.
 - **🎵 Live Media Player**: Melacak lagu yang sedang diputar di laptop (YouTube browser & Spotify Desktop) dengan thumbnail anti-ghosting drag.
 - **📝 Quick Notes**: Tulis dan simpan catatan cepat dengan mode normal maupun expand.
 - **📅 Calendar & Activities**: Kalender bersih tanpa footer waktu yang mengganggu.
