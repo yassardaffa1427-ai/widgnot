@@ -402,10 +402,10 @@ export function AIWidget() {
         {showKeyPanel && (
           <motion.div
             initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-            animate={{ opacity: 1, height: 'auto', marginBottom: 2 }}
+            animate={{ opacity: 1, height: 'auto', marginBottom: 6 }}
             exit={{ opacity: 0, height: 0, marginBottom: 0 }}
             transition={contentSpring}
-            style={{ overflow: 'hidden' }}
+            style={{ overflow: 'hidden', flexShrink: 0 }}
           >
             <div
               style={{
@@ -474,6 +474,7 @@ export function AIWidget() {
           borderRadius: 10,
           padding: '6px 10px',
           lineHeight: 1.4,
+          flexShrink: 0,
         }}>
           {error}
         </div>
@@ -484,18 +485,21 @@ export function AIWidget() {
         ref={chatRef}
         style={{
           flex: 1,
+          minHeight: 0,
           overflowY: 'auto',
           overflowX: 'hidden',
           scrollbarWidth: 'none',
           display: 'flex',
           flexDirection: 'column',
           gap: 10,
-          minHeight: 120,
           paddingRight: 2,
           userSelect: 'text',
           WebkitUserSelect: 'text',
         }}
       >
+        {/* Spacer to push messages down to bottom right above input bar */}
+        <div style={{ marginTop: 'auto' }} />
+
         {messages.map(m => {
           const isUser = m.role === 'user';
           return (

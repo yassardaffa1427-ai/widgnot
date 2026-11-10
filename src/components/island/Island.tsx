@@ -50,7 +50,7 @@ const pageV = {
 export const FIGMA_HEIGHTS: Record<PageId, number> = {
   music: 338,
   bluetooth: 236,
-  ai: 410,
+  ai: 425,
   note: 405,
   calendar: 650,
   timer: 246,
