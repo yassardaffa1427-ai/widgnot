@@ -5,8 +5,8 @@
 <h1 align="center">Widgnot</h1>
 
 <p align="center">
-  <b>Dynamic Island Desktop Widget</b> dengan animasi liquid untuk Windows & macOS.<br />
-  <i>Music Player · Bluetooth Earphones · Notes · Calendar & Activities · Timer · Todo List · Drag once, paste later</i>
+  <b>Dynamic Island Desktop Widget</b> dengan animasi liquid untuk Windows, macOS & Linux.<br />
+  <i>Music Player · Bluetooth Earphones · AI Chat · Notes · Calendar · Timer · Todo List · Drag once, paste later</i>
 </p>
 
 <p align="center">
@@ -15,6 +15,7 @@
   </a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078d7?style=for-the-badge&logo=windows&logoColor=white" alt="Windows" />
   <img src="https://img.shields.io/badge/macOS-Apple%20Silicon%20%26%20Intel-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS" />
+  <img src="https://img.shields.io/badge/Linux-AppImage%20%7C%20Deb-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux" />
   <img src="https://img.shields.io/badge/Engine-Tauri%20v2%20(Rust)-ffc131?style=for-the-badge&logo=tauri&logoColor=black" alt="Tauri v2" />
   <img src="https://img.shields.io/badge/RAM-~30MB-10b981?style=for-the-badge" alt="RAM" />
   <img src="https://img.shields.io/badge/Size-~3MB-success?style=for-the-badge" alt="Size" />
@@ -96,6 +97,27 @@ Widgnot mendukung arsitektur **Apple Silicon (M1/M2/M3/M4)** maupun **Intel Mac*
      xattr -cr /Applications/Widgnot.app
      ```
      Perintah ini menghapus atribut karantina Gatekeeper pada Widgnot.
+
+### 🐧 Panduan Pengguna Linux (Ubuntu, Debian, Fedora, Arch, Linux Mint, dll.)
+Widgnot mendukung Linux dalam format **`.AppImage`** (portabel universal) dan **`.deb`** (paket Debian/Ubuntu).
+
+1. **Format `.AppImage` (Universal untuk semua distro Linux)**:
+   - Unduh file `Widgnot_x.x.x_amd64.AppImage`.
+   - Berikan izin eksekusi lalu jalankan:
+     ```bash
+     chmod +x Widgnot_*.AppImage
+     ./Widgnot_*.AppImage
+     ```
+   - *Atau*: Klik kanan file `.AppImage` di File Manager $\to$ **Properties** $\to$ centang **"Allow executing file as program"**, lalu klik dua kali untuk menjalankan.
+
+2. **Format `.deb` (Khusus Ubuntu, Debian, Linux Mint, Pop!_OS)**:
+   - Unduh file `widgnot_x.x.x_amd64.deb`.
+   - Install dengan perintah:
+     ```bash
+     sudo dpkg -i widgnot_*.deb
+     # atau
+     sudo apt install ./widgnot_*.deb
+     ```
 
 ---
 

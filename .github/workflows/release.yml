@@ -1,4 +1,4 @@
-name: Release Widgnot Desktop App (Windows & macOS)
+name: Release Widgnot Desktop App (Windows, macOS & Linux)
 
 on:
   push:
@@ -20,6 +20,8 @@ jobs:
             build_cmd: 'npm run tauri:build'
           - platform: 'macos-latest'
             build_cmd: 'npx tauri build --target universal-apple-darwin --no-sign'
+          - platform: 'ubuntu-22.04'
+            build_cmd: 'npm run tauri:build'
 
     runs-on: ${{ matrix.platform }}
 
@@ -35,6 +37,12 @@ jobs:
 
       - name: Setup Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Linux build dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
 
       - name: Add macOS compilation targets
         if: matrix.platform == 'macos-latest'
@@ -54,6 +62,8 @@ jobs:
             src-tauri/target/**/bundle/dmg/*.dmg
             src-tauri/target/**/bundle/nsis/*.exe
             src-tauri/target/**/bundle/msi/*.msi
+            src-tauri/target/**/bundle/deb/*.deb
+            src-tauri/target/**/bundle/appimage/*.AppImage
             src-tauri/target/release/widgnot.exe
           generate_release_notes: true
           draft: false

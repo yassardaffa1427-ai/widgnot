@@ -32,6 +32,8 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "category": "Utility",
+    "shortDescription": "Dynamic Island widgets for desktop",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
