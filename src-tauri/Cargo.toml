@@ -12,7 +12,14 @@ rust-version = "1.90"
 
 [lib]
 name = "widgnot_lib"
-crate-type = ["staticlib", "cdylib", "rlib"]
+crate-type = ["rlib"]
+
+[profile.release]
+opt-level = 2
+lto = false
+codegen-units = 16
+panic = "abort"
+strip = true
 
 [build-dependencies]
 tauri-build = { version = "2.7.4", features = [] }
