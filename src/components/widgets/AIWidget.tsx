@@ -502,6 +502,10 @@ export function AIWidget() {
 
         {messages.map(m => {
           const isUser = m.role === 'user';
+          const hasImage = Boolean(m.image);
+          // Ukuran max untuk mode minimize (240px) dan maximize (340px) agar gambar tidak over ke kiri
+          const bubbleMaxWidth = hasImage ? (isWide ? 340 : 240) : '88%';
+
           return (
             <motion.div
               key={m.id}
@@ -518,49 +522,67 @@ export function AIWidget() {
             >
               <div
                 style={{
-                  maxWidth: '88%',
-                  padding: '8px 12px',
-                  // Figma 147:2388: borderRadius 16px 16px 16px 4px (asisten), 16px 16px 4px 16px (user)
-                  borderRadius: isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                  width: hasImage ? '100%' : 'auto',
+                  maxWidth: bubbleMaxWidth,
+                  padding: hasImage ? 0 : '8px 12px',
+                  borderRadius: isUser ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
                   background: isUser ? 'var(--system-blue)' : 'rgba(255,255,255,0.10)',
                   border: isUser ? 'none' : '1px solid rgba(255,255,255,0.09)',
                   color: '#fff',
                   fontSize: 13,
                   lineHeight: 1.45,
                   wordBreak: 'break-word',
-                  boxShadow: isUser ? '0 2px 8px rgba(10,132,255,0.3)' : '0 2px 8px rgba(0,0,0,0.2)',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
+                  overflow: 'hidden',
                   userSelect: 'text',
                   WebkitUserSelect: 'text',
                   cursor: 'text',
                 }}
               >
-                {/* Gambar Lampiran jika ada */}
+                {/* Gambar Lampiran: fill container edge-to-edge tanpa efek blur */}
                 {m.image && (
-                  <div style={{ marginBottom: 6, borderRadius: 12, overflow: 'hidden', maxWidth: '100%' }}>
+                  <div
+                    style={{
+                      width: '100%',
+                      background: '#1e1e1e',
+                      overflow: 'hidden',
+                      display: 'block',
+                    }}
+                  >
                     <img
                       src={m.image}
                       alt="Lampiran"
                       style={{
+                        width: '100%',
+                        height: 'auto',
+                        maxHeight: isWide ? 260 : 180,
+                        objectFit: 'cover',
                         display: 'block',
-                        maxWidth: '100%',
-                        maxHeight: 180,
-                        objectFit: 'contain',
-                        borderRadius: 12,
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
                       }}
                     />
                   </div>
                 )}
-                <span
-                  style={{
-                    whiteSpace: 'pre-wrap',
-                    userSelect: 'text',
-                    WebkitUserSelect: 'text',
-                  }}
-                >
-                  {m.content}
-                </span>
-                {m.isStreaming && <StreamDot />}
+
+                {/* Teks Pesan di Bawah Gambar atau Teks Standar */}
+                {m.content && (
+                  <div
+                    style={{
+                      padding: hasImage ? '8px 12px' : 0,
+                      whiteSpace: 'pre-wrap',
+                      userSelect: 'text',
+                      WebkitUserSelect: 'text',
+                    }}
+                  >
+                    <span>{m.content}</span>
+                    {m.isStreaming && <StreamDot />}
+                  </div>
+                )}
+
+                {!m.content && m.isStreaming && (
+                  <div style={{ padding: '6px 12px' }}>
+                    <StreamDot />
+                  </div>
+                )}
               </div>
             </motion.div>
           );
