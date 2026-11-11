@@ -6,7 +6,7 @@ import { contentSpring } from '@/lib/motion';
 import { TrayArrowDown, DiagonalResize, DiagonalCollapse, Check, Trash } from '../ui/Icons';
 
 export function DropWidget() {
-  const { items, selectedId, compact, addItem, removeItem, clearAll, selectItem, toggleCompact } = useDrop();
+  const { items, selectedId, compact, addItem, removeItem, selectItem, toggleCompact } = useDrop();
   const { open, page, setDropCompact } = useUI();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -247,13 +247,13 @@ export function DropWidget() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '4px 0 12px',
+          padding: '2px 0 10px',
         }}
       >
         <div
           className="w-title"
           style={{
-            fontSize: 22,
+            fontSize: 20,
             fontWeight: 700,
             color: '#ffffff',
             letterSpacing: '-0.02em',
@@ -262,31 +262,30 @@ export function DropWidget() {
           Drag once, paste later
         </div>
 
-        {items.length > 0 && (
-          <button
-            className="icon-btn"
-            onClick={toggleCompact}
-            aria-label={compact ? 'Perbesar panel' : 'Perkecil panel'}
-            title={compact ? 'Perbesar panel' : 'Perkecil panel'}
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              backgroundColor: 'rgba(255, 255, 255, 0.08)',
-              color: '#ffffff',
-              display: 'grid',
-              placeItems: 'center',
-            }}
-          >
-            {compact ? <DiagonalResize size={16} /> : <DiagonalCollapse size={16} />}
-          </button>
-        )}
+        <button
+          className="icon-btn"
+          onClick={toggleCompact}
+          aria-label={compact ? 'Mode 3 kolom (Default)' : 'Mode baris (Minimize)'}
+          title={compact ? 'Beralih ke mode 3 kolom' : 'Beralih ke mode baris horizontal (Minimize)'}
+          style={{
+            width: 30,
+            height: 30,
+            borderRadius: 8,
+            backgroundColor: 'rgba(255, 255, 255, 0.08)',
+            color: '#ffffff',
+            display: 'grid',
+            placeItems: 'center',
+            cursor: 'pointer',
+          }}
+        >
+          {compact ? <DiagonalResize size={15} /> : <DiagonalCollapse size={15} />}
+        </button>
       </div>
 
       {/* Konten Widget: Empty State vs Filled State */}
       <AnimatePresence mode="wait" initial={false}>
         {items.length === 0 ? (
-          /* ---------- Empty State: Dashed drop zone box (Figma Node 416x359) ---------- */
+          /* ---------- Empty State ---------- */
           <motion.div
             key="empty-drop"
             initial={{ opacity: 0, y: 6 }}
@@ -296,43 +295,44 @@ export function DropWidget() {
             onClick={() => fileInputRef.current?.click()}
             style={{
               flex: 1,
-              minHeight: 195,
+              minHeight: compact ? 72 : 240,
               border: isDragOver
                 ? '2px dashed #0088ff'
                 : '1.5px dashed rgba(255, 255, 255, 0.16)',
-              borderRadius: 16,
+              borderRadius: compact ? 16 : 20,
               backgroundColor: isDragOver
                 ? 'rgba(0, 136, 255, 0.08)'
                 : 'rgba(255, 255, 255, 0.02)',
               display: 'flex',
-              flexDirection: 'column',
+              flexDirection: compact ? 'row' : 'column',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              gap: 12,
+              gap: compact ? 10 : 12,
               transition: 'border-color 0.2s, background-color 0.2s',
               userSelect: 'none',
-              padding: '24px 16px',
+              padding: compact ? '12px 16px' : '24px 16px',
             }}
           >
             <div
               style={{
-                width: 48,
-                height: 48,
+                width: compact ? 36 : 48,
+                height: compact ? 36 : 48,
                 borderRadius: '50%',
                 backgroundColor: 'rgba(255, 255, 255, 0.05)',
                 display: 'grid',
                 placeItems: 'center',
                 color: isDragOver ? '#0088ff' : 'rgba(255, 255, 255, 0.7)',
                 transition: 'color 0.2s',
+                flexShrink: 0,
               }}
             >
-              <TrayArrowDown size={28} />
+              <TrayArrowDown size={compact ? 20 : 28} />
             </div>
 
             <div
               style={{
-                fontSize: 13,
+                fontSize: compact ? 12 : 13,
                 fontWeight: 400,
                 color: isDragOver ? '#0088ff' : 'rgba(255, 255, 255, 0.45)',
                 textAlign: 'center',
@@ -342,10 +342,10 @@ export function DropWidget() {
               Drop / paste image here (ctrl + v)
             </div>
           </motion.div>
-        ) : (
-          /* ---------- Filled State: Rounded square preview cards (Figma) ---------- */
+        ) : compact ? (
+          /* ---------- Mode Minimize: Horizontal Scrolling Row (Figma Node 57:2600) ---------- */
           <motion.div
-            key="filled-drop"
+            key="compact-drop"
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
@@ -353,21 +353,25 @@ export function DropWidget() {
             style={{
               display: 'flex',
               flexDirection: 'column',
-              gap: 10,
+              gap: 8,
               flex: 1,
               minHeight: 0,
             }}
           >
-            {/* Grid Thumbnail Gambar */}
             <div
+              onWheel={(e) => {
+                if (e.deltaY) e.currentTarget.scrollLeft += e.deltaY;
+              }}
               style={{
                 display: 'flex',
-                gap: 12,
-                flexWrap: 'wrap',
-                overflowY: 'auto',
-                maxHeight: compact ? 125 : 205,
-                padding: '4px 2px 8px',
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 10,
+                overflowX: 'auto',
+                overflowY: 'hidden',
                 scrollbarWidth: 'none',
+                flexWrap: 'nowrap',
+                padding: '2px 0 6px',
               }}
             >
               {items.map((it) => {
@@ -377,21 +381,22 @@ export function DropWidget() {
                 return (
                   <motion.div
                     key={it.id}
-                    whileHover={{ scale: 1.03 }}
+                    whileHover={{ scale: 1.04 }}
                     whileTap={{ scale: 0.96 }}
                     onClick={() => handleSelectAndCopy(it)}
                     style={{
                       position: 'relative',
-                      width: 105,
-                      height: 105,
-                      borderRadius: 18,
+                      width: 72,
+                      height: 72,
+                      flexShrink: 0,
+                      aspectRatio: '1 / 1',
+                      borderRadius: 16,
                       overflow: 'hidden',
                       backgroundColor: '#2a2a2e',
                       boxShadow: isSelected
                         ? '0 0 0 2.5px #0088ff, 0 6px 20px rgba(0, 136, 255, 0.35)'
                         : '0 4px 14px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.08)',
                       cursor: 'grab',
-                      flexShrink: 0,
                       transition: 'box-shadow 0.2s',
                     }}
                   >
@@ -400,7 +405,7 @@ export function DropWidget() {
                       onDragStart={(e: React.DragEvent) => {
                         setupImageDragOut(e, it);
                       }}
-                      title="Klik untuk copy, atau tarik (drag) keluar ke aplikasi lain"
+                      title="Klik untuk copy, atau drag keluar ke aplikasi lain"
                       style={{ width: '100%', height: '100%' }}
                     >
                       <img
@@ -411,7 +416,7 @@ export function DropWidget() {
                           height: '100%',
                           objectFit: 'cover',
                           display: 'block',
-                          borderRadius: 18,
+                          borderRadius: 16,
                           pointerEvents: 'none',
                           userSelect: 'none',
                         }}
@@ -429,19 +434,19 @@ export function DropWidget() {
                           style={{
                             position: 'absolute',
                             inset: 0,
-                            backgroundColor: 'rgba(0, 136, 255, 0.85)',
+                            backgroundColor: 'rgba(0, 136, 255, 0.9)',
                             display: 'flex',
                             flexDirection: 'column',
                             alignItems: 'center',
                             justifyContent: 'center',
                             color: '#ffffff',
-                            gap: 4,
-                            borderRadius: 18,
+                            gap: 2,
+                            borderRadius: 16,
                             zIndex: 2,
                           }}
                         >
-                          <Check size={20} />
-                          <span style={{ fontSize: 11, fontWeight: 700 }}>Copied!</span>
+                          <Check size={18} />
+                          <span style={{ fontSize: 10, fontWeight: 700 }}>Copied!</span>
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -451,19 +456,19 @@ export function DropWidget() {
                       <div
                         style={{
                           position: 'absolute',
-                          top: 6,
-                          left: 6,
-                          width: 8,
-                          height: 8,
+                          top: 5,
+                          left: 5,
+                          width: 7,
+                          height: 7,
                           borderRadius: '50%',
                           backgroundColor: '#0088ff',
-                          boxShadow: '0 0 8px #0088ff',
+                          boxShadow: '0 0 6px #0088ff',
                           zIndex: 2,
                         }}
                       />
                     )}
 
-                    {/* Delete button on top right */}
+                    {/* Delete button */}
                     <button
                       className="icon-btn"
                       onClick={(e) => {
@@ -474,8 +479,194 @@ export function DropWidget() {
                       title="Hapus"
                       style={{
                         position: 'absolute',
-                        top: 5,
-                        right: 5,
+                        top: 4,
+                        right: 4,
+                        width: 20,
+                        height: 20,
+                        borderRadius: '50%',
+                        backgroundColor: 'rgba(0, 0, 0, 0.65)',
+                        color: 'rgba(255, 255, 255, 0.8)',
+                        display: 'grid',
+                        placeItems: 'center',
+                        zIndex: 3,
+                        opacity: 0.8,
+                      }}
+                    >
+                      <Trash size={10} />
+                    </button>
+                  </motion.div>
+                );
+              })}
+
+              {/* Add more button tile in horizontal row */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                aria-label="Tambah gambar lagi"
+                title="Tambah gambar (atau Ctrl+V)"
+                style={{
+                  width: 72,
+                  height: 72,
+                  flexShrink: 0,
+                  aspectRatio: '1 / 1',
+                  borderRadius: 16,
+                  border: '1.5px dashed rgba(255, 255, 255, 0.16)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'rgba(255, 255, 255, 0.5)',
+                  cursor: 'pointer',
+                  gap: 2,
+                  fontSize: 10,
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#0088ff';
+                  e.currentTarget.style.color = '#0088ff';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.16)';
+                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.5)';
+                }}
+              >
+                <span style={{ fontSize: 20, fontWeight: 300, lineHeight: 1 }}>+</span>
+                <span>Add</span>
+              </button>
+            </div>
+          </motion.div>
+        ) : (
+          /* ---------- Mode Default: 3 Kolom Grid ke Bawah (Figma Node 57:2503) ---------- */
+          <motion.div
+            key="grid-drop"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={contentSpring}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              flex: 1,
+              minHeight: 0,
+            }}
+          >
+            {/* Grid 3 Baris / Kolom ke Samping, Scroll Vertikal ke Bawah */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: 12,
+                overflowY: 'auto',
+                maxHeight: 270,
+                padding: '2px 0 8px',
+                scrollbarWidth: 'none',
+              }}
+            >
+              {items.map((it) => {
+                const isSelected = selectedId === it.id;
+                const isCopied = copiedId === it.id;
+
+                return (
+                  <motion.div
+                    key={it.id}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => handleSelectAndCopy(it)}
+                    style={{
+                      position: 'relative',
+                      width: '100%',
+                      aspectRatio: '1 / 1',
+                      borderRadius: 20,
+                      overflow: 'hidden',
+                      backgroundColor: '#2a2a2e',
+                      boxShadow: isSelected
+                        ? '0 0 0 2.5px #0088ff, 0 6px 20px rgba(0, 136, 255, 0.35)'
+                        : '0 4px 14px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.08)',
+                      cursor: 'grab',
+                      transition: 'box-shadow 0.2s',
+                    }}
+                  >
+                    <div
+                      draggable
+                      onDragStart={(e: React.DragEvent) => {
+                        setupImageDragOut(e, it);
+                      }}
+                      title="Klik untuk copy, atau drag keluar ke aplikasi lain"
+                      style={{ width: '100%', height: '100%' }}
+                    >
+                      <img
+                        src={it.dataUrl}
+                        alt={it.name}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          display: 'block',
+                          borderRadius: 20,
+                          pointerEvents: 'none',
+                          userSelect: 'none',
+                        }}
+                        draggable={false}
+                      />
+                    </div>
+
+                    {/* Copied Feedback Badge */}
+                    <AnimatePresence>
+                      {isCopied && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0 }}
+                          style={{
+                            position: 'absolute',
+                            inset: 0,
+                            backgroundColor: 'rgba(0, 136, 255, 0.88)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#ffffff',
+                            gap: 4,
+                            borderRadius: 20,
+                            zIndex: 2,
+                          }}
+                        >
+                          <Check size={22} />
+                          <span style={{ fontSize: 11, fontWeight: 700 }}>Copied!</span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {/* Selected Active Indicator */}
+                    {isSelected && !isCopied && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: 8,
+                          left: 8,
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          backgroundColor: '#0088ff',
+                          boxShadow: '0 0 8px #0088ff',
+                          zIndex: 2,
+                        }}
+                      />
+                    )}
+
+                    {/* Delete button */}
+                    <button
+                      className="icon-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeItem(it.id);
+                      }}
+                      aria-label="Hapus gambar"
+                      title="Hapus"
+                      style={{
+                        position: 'absolute',
+                        top: 6,
+                        right: 6,
                         width: 22,
                         height: 22,
                         borderRadius: '50%',
@@ -493,15 +684,15 @@ export function DropWidget() {
                 );
               })}
 
-              {/* Add more button tile */}
+              {/* Add more button tile in grid */}
               <button
                 onClick={() => fileInputRef.current?.click()}
                 aria-label="Tambah gambar lagi"
                 title="Tambah gambar (atau Ctrl+V)"
                 style={{
-                  width: 105,
-                  height: 105,
-                  borderRadius: 18,
+                  width: '100%',
+                  aspectRatio: '1 / 1',
+                  borderRadius: 20,
                   border: '1.5px dashed rgba(255, 255, 255, 0.16)',
                   backgroundColor: 'rgba(255, 255, 255, 0.02)',
                   display: 'flex',
@@ -510,7 +701,6 @@ export function DropWidget() {
                   justifyContent: 'center',
                   color: 'rgba(255, 255, 255, 0.5)',
                   cursor: 'pointer',
-                  flexShrink: 0,
                   gap: 4,
                   fontSize: 11,
                   transition: 'all 0.2s',
@@ -524,37 +714,9 @@ export function DropWidget() {
                   e.currentTarget.style.color = 'rgba(255, 255, 255, 0.5)';
                 }}
               >
-                <span style={{ fontSize: 24, fontWeight: 300, lineHeight: 1 }}>+</span>
+                <span style={{ fontSize: 26, fontWeight: 300, lineHeight: 1 }}>+</span>
                 <span>Add / Paste</span>
               </button>
-            </div>
-
-            {/* Hint & Actions Footer */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '2px 4px 0',
-                fontSize: 12,
-                color: 'rgba(255, 255, 255, 0.45)',
-              }}
-            >
-              <span>Klik gambar untuk menyalin (Ctrl+V di Figma)</span>
-              {items.length > 1 && (
-                <button
-                  onClick={clearAll}
-                  style={{
-                    color: 'rgba(255, 255, 255, 0.4)',
-                    fontSize: 11,
-                    cursor: 'pointer',
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = '#ff4d4f'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255, 255, 255, 0.4)'; }}
-                >
-                  Hapus Semua
-                </button>
-              )}
             </div>
           </motion.div>
         )}

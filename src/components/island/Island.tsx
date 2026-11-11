@@ -55,7 +55,7 @@ export const FIGMA_HEIGHTS: Record<PageId, number> = {
   calendar: 650,
   timer: 246,
   todo: 385,
-  drop: 380,
+  drop: 450,
 };
 
 export function Island() {
