@@ -371,7 +371,7 @@ export function DropWidget() {
                 overflowY: 'hidden',
                 scrollbarWidth: 'none',
                 flexWrap: 'nowrap',
-                padding: '2px 0 6px',
+                padding: '4px 2px 6px',
               }}
             >
               {items.map((it) => {
@@ -393,11 +393,8 @@ export function DropWidget() {
                       borderRadius: 16,
                       overflow: 'hidden',
                       backgroundColor: '#2a2a2e',
-                      boxShadow: isSelected
-                        ? '0 0 0 2.5px #0088ff, 0 6px 20px rgba(0, 136, 255, 0.35)'
-                        : '0 4px 14px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.08)',
+                      boxShadow: '0 4px 14px rgba(0, 0, 0, 0.3)',
                       cursor: 'grab',
-                      transition: 'box-shadow 0.2s',
                     }}
                   >
                     <div
@@ -423,6 +420,20 @@ export function DropWidget() {
                         draggable={false}
                       />
                     </div>
+
+                    {/* Inside Stroke / Border (Figma stroke: inside) agar tidak terpotong padding */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        borderRadius: 16,
+                        border: isSelected ? '2.5px solid #0088ff' : '1px solid rgba(255, 255, 255, 0.08)',
+                        pointerEvents: 'none',
+                        zIndex: 2,
+                        boxSizing: 'border-box',
+                        transition: 'border 0.2s',
+                      }}
+                    />
 
                     {/* Copied Feedback Badge */}
                     <AnimatePresence>
@@ -558,7 +569,7 @@ export function DropWidget() {
                 gap: 12,
                 overflowY: 'auto',
                 maxHeight: 270,
-                padding: '2px 0 8px',
+                padding: '4px 2px 8px',
                 scrollbarWidth: 'none',
               }}
             >
@@ -579,11 +590,8 @@ export function DropWidget() {
                       borderRadius: 20,
                       overflow: 'hidden',
                       backgroundColor: '#2a2a2e',
-                      boxShadow: isSelected
-                        ? '0 0 0 2.5px #0088ff, 0 6px 20px rgba(0, 136, 255, 0.35)'
-                        : '0 4px 14px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.08)',
+                      boxShadow: '0 4px 14px rgba(0, 0, 0, 0.3)',
                       cursor: 'grab',
-                      transition: 'box-shadow 0.2s',
                     }}
                   >
                     <div
@@ -609,6 +617,20 @@ export function DropWidget() {
                         draggable={false}
                       />
                     </div>
+
+                    {/* Inside Stroke / Border (Figma stroke: inside) agar tidak terpotong padding */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        borderRadius: 20,
+                        border: isSelected ? '2.5px solid #0088ff' : '1px solid rgba(255, 255, 255, 0.08)',
+                        pointerEvents: 'none',
+                        zIndex: 2,
+                        boxSizing: 'border-box',
+                        transition: 'border 0.2s',
+                      }}
+                    />
 
                     {/* Copied Feedback Badge */}
                     <AnimatePresence>
