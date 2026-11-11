@@ -6,10 +6,12 @@ import { Mascot } from '../ui/Mascot';
 import { Disc } from '../ui/Icons';
 import { useMusic } from '@/store/music';
 import { timerTotal, useTimer } from '@/store/timer';
+import { useMeeting } from '@/store/meeting';
 import { useData } from '@/store/data';
 import { useUI } from '@/store/ui';
 import { getUpcomingDeadline, type DeadlineAlert } from '@/lib/deadline';
 import { contentSpring } from '@/lib/motion';
+import { RecordMeetingIcon } from '@/components/ui/MeetingIcons';
 
 /**
  * Isi pill 84x84. Prioritas: timer berjalan > musik diputar > maskot.
@@ -107,6 +109,7 @@ export function IdlePill({ isLeftDock = false }: IdlePillProps) {
 
   const isTimerActive = timer.running || timer.remaining < timerTotal(timer);
   const hasMusic = playing && tracks[index];
+  const { isRecording: isMeetingRecording, formatDuration } = useMeeting();
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%', display: 'grid', placeItems: 'center' }}>
@@ -361,7 +364,47 @@ export function IdlePill({ isLeftDock = false }: IdlePillProps) {
       </AnimatePresence>
 
       {/* Main Pill Content */}
-      {isTimerActive ? (
+      {isMeetingRecording ? (
+        /* Figma 211:2532: Idle pill status merekam meeting */
+        <div
+          style={{
+            position: 'relative',
+            width: 84,
+            height: 84,
+            borderRadius: '50%',
+            backgroundColor: '#161616',
+            boxSizing: 'border-box',
+            border: '6px solid #FF2121',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 2,
+            boxShadow: '0 0 20px rgba(255, 33, 33, 0.45)',
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+            pointerEvents: 'none',
+          }}
+        >
+          {/* Ikon Monitor Kamera Video */}
+          <div style={{ color: '#FFFFFF', display: 'grid', placeItems: 'center', marginTop: -2 }}>
+            <RecordMeetingIcon size={25} color="#FFFFFF" />
+          </div>
+          {/* Waktu Durasi Merekam (MM:SS) */}
+          <div
+            style={{
+              fontSize: 16,
+              fontWeight: 700,
+              color: '#FFFFFF',
+              letterSpacing: '-0.02em',
+              lineHeight: 1,
+              fontVariantNumeric: 'tabular-nums',
+            }}
+          >
+            {formatDuration()}
+          </div>
+        </div>
+      ) : isTimerActive ? (
         <div style={{ width: '100%', height: '100%', pointerEvents: 'none', userSelect: 'none' }}>
           <TimerSquirclePill
             remaining={timer.remaining}

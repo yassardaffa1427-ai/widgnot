@@ -2,8 +2,10 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAI } from '@/store/ai';
 import { useUI } from '@/store/ui';
+import { useMeeting } from '@/store/meeting';
 import { contentSpring } from '@/lib/motion';
 import { AIMascotAvatar } from '@/components/ui/AIMascotAvatar';
+import { MoreDotsIcon, FileUploadIcon, RecordMeetingIcon } from '@/components/ui/MeetingIcons';
 
 /* ─── Streaming Dot ─────────────────────────────────────────────────────────── */
 function StreamDot() {
@@ -127,19 +129,51 @@ function MaximizeIcon({ isWide, size = 18 }: { isWide: boolean; size?: number })
 export function AIWidget() {
   const { apiKey, modelLabel, messages, isGenerating, error, setApiKey, setWide, isWide, clearMessages, sendMessage } = useAI();
   const { setWide: setIslandWide } = useUI();
+  const {
+    isRecording,
+    realtimeNotes,
+    interimText,
+    isMeetingEnded,
+    meetingSummary,
+    isSummarizing,
+    startRecording,
+    stopRecording,
+    summarizeMeeting,
+    exportDocx,
+    resetMeeting,
+    formatDuration,
+  } = useMeeting();
 
   const [input, setInput] = useState('');
   const [attachedImage, setAttachedImage] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [showKeyPanel, setShowKeyPanel] = useState(!apiKey);
   const [keyDraft, setKeyDraft] = useState(apiKey);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+
   const chatRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
+
+  // Click outside to close more menu
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
+        setShowMoreMenu(false);
+      }
+    };
+    if (showMoreMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMoreMenu]);
 
   // Auto scroll
   useEffect(() => {
     chatRef.current?.scrollTo({ top: chatRef.current.scrollHeight, behavior: 'smooth' });
-  }, [messages, isGenerating, attachedImage]);
+  }, [messages, isGenerating, attachedImage, realtimeNotes, isRecording, meetingSummary]);
 
   // Maximize: island menjadi 35% lebih lebar
   const handleMaximize = useCallback(() => {
@@ -264,15 +298,21 @@ export function AIWidget() {
       onDragLeave={() => setIsDragOver(false)}
       onDrop={handleDrop}
     >
-      {/* Hidden file input untuk pilih gambar */}
+      {/* Hidden file input untuk pilih file/gambar/video */}
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept="image/*,video/*,.pdf,.doc,.docx,.txt"
         hidden
         onChange={(e) => {
           const file = e.target.files?.[0];
-          if (file) processImageFile(file);
+          if (file) {
+            if (file.type.startsWith('image/')) {
+              processImageFile(file);
+            } else {
+              setInput(`Tolong bantu saya analisis file: ${file.name}`);
+            }
+          }
           e.target.value = '';
         }}
       />
@@ -587,6 +627,189 @@ export function AIWidget() {
             </motion.div>
           );
         })}
+
+        {/* ── Active Meeting Recording / Realtime Notes Bubble (Figma 207:2418) ── */}
+        {(isRecording || isMeetingEnded) && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={contentSpring}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+              maxWidth: '92%',
+              alignSelf: 'flex-start',
+            }}
+          >
+            {/* Main AI Realtime Transcription Card */}
+            <div
+              style={{
+                borderRadius: 18,
+                padding: '12px 14px',
+                background: 'rgba(255, 255, 255, 0.08)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: 'var(--label)',
+                fontSize: 13,
+                lineHeight: 1.5,
+                boxShadow: '0 4px 18px rgba(0, 0, 0, 0.25)',
+              }}
+            >
+              {/* Header: Ai sedang mengetik secara realtime — Figma 207:2418 */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingBottom: 8,
+                  marginBottom: 8,
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                  gap: 8,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, fontSize: 13, color: '#FFFFFF' }}>
+                  <span>{isRecording ? 'Ai sedang mengetik secara realtime' : 'Notulen Rapat Selesai'}</span>
+                  {isRecording && <StreamDot />}
+                </div>
+                <span
+                  style={{
+                    fontSize: 11,
+                    color: 'var(--tertiary-label)',
+                    fontVariantNumeric: 'tabular-nums',
+                    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                    padding: '2px 6px',
+                    borderRadius: 6,
+                  }}
+                >
+                  {formatDuration()}
+                </span>
+              </div>
+
+              {/* Ringkasan Poin Penting (jika sudah diringkas) */}
+              {meetingSummary && (
+                <div
+                  style={{
+                    marginBottom: 12,
+                    padding: '10px 12px',
+                    background: 'rgba(10, 132, 255, 0.12)',
+                    border: '1px solid rgba(10, 132, 255, 0.3)',
+                    borderRadius: 12,
+                    fontSize: 12.5,
+                    whiteSpace: 'pre-wrap',
+                    color: '#E5E5EA',
+                    userSelect: 'text',
+                    WebkitUserSelect: 'text',
+                  }}
+                >
+                  {meetingSummary}
+                </div>
+              )}
+
+              {/* List Poin Realtime */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, userSelect: 'text', WebkitUserSelect: 'text' }}>
+                {realtimeNotes.map((note, idx) => (
+                  <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                    <span style={{ color: '#0a84ff', marginTop: 1, fontSize: 11 }}>•</span>
+                    <span style={{ flex: 1, color: '#D1D1D6', fontSize: 12.5 }}>{note}</span>
+                  </div>
+                ))}
+                {interimText && (
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, opacity: 0.7, fontStyle: 'italic' }}>
+                    <span style={{ color: '#0a84ff', marginTop: 1, fontSize: 11 }}>•</span>
+                    <span style={{ flex: 1, color: '#8E8E93', fontSize: 12.5 }}>{interimText}...</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Post-Meeting Action Buttons: [Ringkaskan poin penting] & [Cetak docx] */}
+            {isMeetingEnded && (
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={contentSpring}
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 8,
+                  alignItems: 'center',
+                  marginTop: 2,
+                }}
+              >
+                {!meetingSummary && (
+                  <button
+                    type="button"
+                    onClick={() => summarizeMeeting(apiKey, modelLabel)}
+                    disabled={isSummarizing}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      background: '#0a84ff',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      borderRadius: 12,
+                      padding: '8px 14px',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: isSummarizing ? 'wait' : 'pointer',
+                      boxShadow: '0 2px 8px rgba(10, 132, 255, 0.4)',
+                      transition: 'transform 0.1s ease',
+                    }}
+                    onPointerDown={(e) => { e.currentTarget.style.transform = 'scale(0.96)'; }}
+                    onPointerUp={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+                  >
+                    <span>✨</span>
+                    <span>{isSummarizing ? 'Meringkas...' : 'Ringkaskan poin penting'}</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => exportDocx()}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: 'rgba(255, 255, 255, 0.12)',
+                    color: '#FFFFFF',
+                    border: '1px solid rgba(255, 255, 255, 0.18)',
+                    borderRadius: 12,
+                    padding: '8px 14px',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onPointerDown={(e) => { e.currentTarget.style.transform = 'scale(0.96)'; }}
+                  onPointerUp={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)'; }}
+                >
+                  <FileUploadIcon size={14} color="#FFFFFF" />
+                  <span>Cetak docx</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => resetMeeting()}
+                  style={{
+                    background: 'transparent',
+                    color: 'var(--tertiary-label)',
+                    border: 'none',
+                    borderRadius: 8,
+                    padding: '6px 10px',
+                    fontSize: 11.5,
+                    cursor: 'pointer',
+                    textDecoration: 'underline',
+                  }}
+                >
+                  Selesai
+                </button>
+              </motion.div>
+            )}
+          </motion.div>
+        )}
       </div>
 
       {/* ── Lampiran Gambar Pratinjau (Google Lens Mode) ── */}
@@ -658,86 +881,262 @@ export function AIWidget() {
         )}
       </AnimatePresence>
 
-      {/* ── Input Bar — Figma 147:2392 ── */}
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-          background: 'rgba(255,255,255,0.06)',
-          border: '1px solid rgba(255,255,255,0.09)',
-          borderRadius: 16,
-          padding: '4px 6px 4px 12px',
-          marginTop: 'auto',
-          flexShrink: 0,
-        }}
-      >
-        <input
-          type="text"
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          placeholder={attachedImage ? 'Tanya tentang gambar ini…' : 'Tanya AI atau ketik sesuatu…'}
+      {/* ── Input Bar / Recording Bar — Figma 155:2352 & 207:2418 ── */}
+      {isRecording ? (
+        /* Figma 207:2418: Bar saat sedang merekam rapat */
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          onClick={stopRecording}
+          title="Klik untuk menghentikan rekaman meeting"
           style={{
-            flex: 1,
-            background: 'transparent',
-            border: 'none',
-            outline: 'none',
-            color: input ? 'var(--label)' : '#757575',
-            fontSize: 13,
-            padding: '6px 0',
-          }}
-        />
-
-        {/* Image Attachment Button (Google Lens / Attach Image) */}
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          aria-label="Pilih gambar untuk dianalisis (Google Lens)"
-          title="Pilih gambar atau drag & drop gambar ke chat"
-          style={{
-            width: 30,
-            height: 30,
-            borderRadius: 10,
-            border: 'none',
-            background: attachedImage ? 'rgba(10, 132, 255, 0.22)' : 'transparent',
-            color: attachedImage ? '#0a84ff' : 'var(--tertiary-label)',
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            background: 'rgba(255, 255, 255, 0.06)',
+            border: '1px solid rgba(255, 255, 255, 0.09)',
+            borderRadius: 16,
+            padding: '8px 14px',
+            marginTop: 'auto',
+            flexShrink: 0,
             cursor: 'pointer',
-            display: 'grid',
-            placeItems: 'center',
-            transition: 'all 0.15s ease',
-            flexShrink: 0,
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+            transition: 'background 0.15s ease',
           }}
-          onPointerDown={e => { e.currentTarget.style.transform = 'scale(0.92)'; }}
-          onPointerUp={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.09)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'; }}
         >
-          <ImageIcon size={18} />
-        </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {/* Red Pulsing Dot */}
+            <motion.div
+              animate={{ scale: [1, 1.25, 1], opacity: [1, 0.7, 1] }}
+              transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
+              style={{
+                width: 14,
+                height: 14,
+                borderRadius: '50%',
+                backgroundColor: '#FF2121',
+                boxShadow: '0 0 10px rgba(255, 33, 33, 0.7)',
+                flexShrink: 0,
+              }}
+            />
+            <span style={{ fontSize: 13, color: 'var(--secondary-label)', fontWeight: 500 }}>
+              Sedang merekam
+            </span>
+          </div>
 
-        {/* Send button 32×32 borderRadius 10px — Figma 147:2400 */}
-        <button
-          type="submit"
-          disabled={(!input.trim() && !attachedImage) || isGenerating}
-          aria-label="Kirim pesan"
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 10,
-            border: 'none',
-            background: (input.trim() || attachedImage) && !isGenerating ? 'var(--system-blue)' : 'transparent',
-            color: (input.trim() || attachedImage) && !isGenerating ? '#fff' : 'var(--quaternary-label)',
-            cursor: (input.trim() || attachedImage) && !isGenerating ? 'pointer' : 'default',
-            display: 'grid',
-            placeItems: 'center',
-            transition: 'background 0.15s ease, transform 0.1s ease',
-            flexShrink: 0,
-          }}
-          onPointerDown={e => { if (input.trim() || attachedImage) e.currentTarget.style.transform = 'scale(0.92)'; }}
-          onPointerUp={e => { e.currentTarget.style.transform = 'scale(1)'; }}
-        >
-          <SendIcon />
-        </button>
-      </form>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span
+              style={{
+                fontSize: 13,
+                color: 'var(--secondary-label)',
+                fontVariantNumeric: 'tabular-nums',
+                fontWeight: 500,
+              }}
+            >
+              {formatDuration().replace(':', '.')}
+            </span>
+          </div>
+        </motion.div>
+      ) : (
+        /* Normal Chat Input Bar dengan tombol Titik Tiga (•••) di kiri — Figma 155:2352 / 212:2537 */
+        <div style={{ position: 'relative', marginTop: 'auto', flexShrink: 0 }}>
+          {/* Popover Menu ke atas */}
+          <AnimatePresence>
+            {showMoreMenu && (
+              <motion.div
+                ref={moreMenuRef}
+                initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 6, scale: 0.95 }}
+                transition={contentSpring}
+                style={{
+                  position: 'absolute',
+                  bottom: 'calc(100% + 8px)',
+                  left: 0,
+                  width: 250,
+                  backgroundColor: '#222222',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: 16,
+                  padding: 6,
+                  boxShadow: '0 12px 36px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.05)',
+                  zIndex: 40,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 2,
+                }}
+              >
+                {/* Item 1: Tambahkan file / gambar / video */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowMoreMenu(false);
+                    fileInputRef.current?.click();
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    padding: '9px 12px',
+                    borderRadius: 10,
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#D1D1D6',
+                    fontSize: 12.5,
+                    fontWeight: 500,
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.12s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                    e.currentTarget.style.color = '#FFFFFF';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = '#D1D1D6';
+                  }}
+                >
+                  <FileUploadIcon size={18} color="#9E9E9E" />
+                  <span>Tambahkan file / gambar / video</span>
+                </button>
+
+                {/* Divider Pemisah */}
+                <div
+                  style={{
+                    height: 1,
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    margin: '3px 6px',
+                  }}
+                />
+
+                {/* Item 2: Record meeting */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowMoreMenu(false);
+                    void startRecording();
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    padding: '9px 12px',
+                    borderRadius: 10,
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#D1D1D6',
+                    fontSize: 12.5,
+                    fontWeight: 500,
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.12s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                    e.currentTarget.style.color = '#FFFFFF';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = '#D1D1D6';
+                  }}
+                >
+                  <RecordMeetingIcon size={18} color="#9E9E9E" />
+                  <span>Record meeting</span>
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <form
+            onSubmit={handleSubmit}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.09)',
+              borderRadius: 16,
+              padding: '4px 6px 4px 8px',
+            }}
+          >
+            {/* Tombol Titik Tiga (•••) di sisi kiri input — Figma 155:2352 / 212:2537 */}
+            <button
+              type="button"
+              onClick={() => setShowMoreMenu((v) => !v)}
+              aria-label="Menu opsi lainnya"
+              title="Menu lampiran & rekam meeting"
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 8,
+                border: 'none',
+                background: showMoreMenu ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
+                color: showMoreMenu ? '#FFFFFF' : 'var(--tertiary-label)',
+                cursor: 'pointer',
+                display: 'grid',
+                placeItems: 'center',
+                transition: 'all 0.15s ease',
+                flexShrink: 0,
+              }}
+              onMouseEnter={(e) => {
+                if (!showMoreMenu) e.currentTarget.style.color = 'var(--secondary-label)';
+              }}
+              onMouseLeave={(e) => {
+                if (!showMoreMenu) e.currentTarget.style.color = 'var(--tertiary-label)';
+              }}
+            >
+              <MoreDotsIcon size={17} />
+            </button>
+
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={attachedImage ? 'Tanya tentang gambar ini…' : 'Tanya AI atau ketik sesuatu…'}
+              style={{
+                flex: 1,
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                color: input ? 'var(--label)' : '#757575',
+                fontSize: 13,
+                padding: '6px 2px',
+              }}
+            />
+
+            {/* Send button 32×32 borderRadius 10px — Figma 147:2400 */}
+            <button
+              type="submit"
+              disabled={(!input.trim() && !attachedImage) || isGenerating}
+              aria-label="Kirim pesan"
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 10,
+                border: 'none',
+                background: (input.trim() || attachedImage) && !isGenerating ? 'var(--system-blue)' : 'transparent',
+                color: (input.trim() || attachedImage) && !isGenerating ? '#fff' : 'var(--quaternary-label)',
+                cursor: (input.trim() || attachedImage) && !isGenerating ? 'pointer' : 'default',
+                display: 'grid',
+                placeItems: 'center',
+                transition: 'background 0.15s ease, transform 0.1s ease',
+                flexShrink: 0,
+              }}
+              onPointerDown={(e) => {
+                if (input.trim() || attachedImage) e.currentTarget.style.transform = 'scale(0.92)';
+              }}
+              onPointerUp={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+            >
+              <SendIcon />
+            </button>
+          </form>
+        </div>
+      )}
     </section>
   );
 }

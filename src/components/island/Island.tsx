@@ -5,6 +5,7 @@ import {
 import { useUI, type PageId } from '@/store/ui';
 import { useData } from '@/store/data';
 import { useTimer } from '@/store/timer';
+import { useMeeting } from '@/store/meeting';
 import { useViewport } from '@/lib/hooks';
 import { contentSpring, instant, islandSpring, snapSpring } from '@/lib/motion';
 import { Navbar } from './Navbar';
@@ -184,6 +185,11 @@ const H_AI_WIDE = Math.round(410 * 1.45); // tinggi maximize AI (+45% = 595px)
   const openWidget = () => {
     window.electronAPI?.setInteractive(true);
     setIsIdleHidden(false);
+    if (useMeeting.getState().isRecording) {
+      goTo('ai');
+      setOpen(true);
+      return;
+    }
     const t = useTimer.getState();
     const isTimerActive = t.running || t.remaining < (t.mode === 'focus' ? t.focusSec : t.breakSec);
     if (isTimerActive) {
