@@ -7,7 +7,10 @@ import { contentSpring } from '@/lib/motion';
 export function Pager() {
   const { page, go, goTo } = useUI();
   return (
-    <div className="pager">
+    <div
+      className="pager"
+      style={page === 'music' ? { borderTop: '0.5px solid rgba(255, 255, 255, 0.06)' } : undefined}
+    >
       <button className="icon-btn" onClick={() => go(-1)} aria-label="Halaman sebelumnya"><ArrowCircle dir="left" /></button>
       <div className="pager__dots" role="tablist" aria-label="Widget">
         {PAGE_ORDER.map((p) => (

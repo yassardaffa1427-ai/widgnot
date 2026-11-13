@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { extractMusicGradient } from '@/lib/colorExtractor';
 
 export interface Track {
   id: string;
@@ -14,6 +15,9 @@ export interface Track {
 export type BtStatus = 'idle' | 'pairing' | 'connected';
 export type MediaSource = 'none' | 'spotify' | 'youtube' | 'local';
 
+export const DEFAULT_MUSIC_GRADIENT =
+  'linear-gradient(to bottom, rgba(27, 27, 27, 0) 0%, rgba(142, 0, 68, 0.4) 50%, rgba(142, 0, 68, 0.86) 82%, rgb(248, 0, 136) 100%)';
+
 interface MusicState {
   hasActiveMedia: boolean;
   source: MediaSource;
@@ -22,6 +26,7 @@ interface MusicState {
   playing: boolean;
   current: number;
   duration: number;
+  gradient: string;
   bt: BtStatus;
   btEnabled: boolean;
   btConnected: boolean;
@@ -31,6 +36,7 @@ interface MusicState {
   btBatteryL: number | null;
   deviceType: 'speaker' | 'airpods';
   isOSMedia?: boolean;
+  setGradient: (g: string) => void;
   addFiles: (files: FileList | File[]) => void;
   toggle: () => void;
   next: () => void;
@@ -45,7 +51,17 @@ interface MusicState {
   handleOSMedia: (payload: OSMediaData) => void;
 }
 
-const DEFAULT_TRACKS: Track[] = [];
+const DEFAULT_TRACKS: Track[] = [
+  {
+    id: 'deep-dive-regloss',
+    name: 'Original Deep Dive/轟はじめ【Official MV】',
+    artist: 'Hajime Ch. 轟はじめ ‐ ReGLOSS',
+    duration: 180,
+    thumbnail: '/figma-assets/music-cover-player.png',
+    coverGradient: DEFAULT_MUSIC_GRADIENT,
+    source: 'youtube',
+  },
+];
 
 // Simple ambient audio synth generator using Web Audio API
 class SynthPlayer {
@@ -227,6 +243,10 @@ export const useMusic = create<MusicState>((set, get) => {
     }
     set({ index: i, current: 0, duration: t.duration || 180, playing: autoplay });
     if (autoplay) startTicker();
+
+    void extractMusicGradient(t.thumbnail, t.name).then((res) => {
+      set({ gradient: res.gradient });
+    });
   };
 
   if (audio) {
@@ -258,6 +278,7 @@ export const useMusic = create<MusicState>((set, get) => {
     playing: false,
     current: 0,
     duration: 0,
+    gradient: DEFAULT_MUSIC_GRADIENT,
     bt: 'connected',
     btEnabled: true,
     btConnected: true,
@@ -266,6 +287,8 @@ export const useMusic = create<MusicState>((set, get) => {
     btBatteryR: null,
     btBatteryL: null,
     deviceType: 'airpods',
+
+    setGradient: (gradient: string) => set({ gradient }),
 
     connectSource: (src: 'spotify' | 'youtube') => {
       if (window.electronAPI?.toggleOSMedia) {
@@ -305,7 +328,13 @@ export const useMusic = create<MusicState>((set, get) => {
         return;
       }
 
-      if (!s.hasActiveMedia) return;
+      if (!s.hasActiveMedia) {
+        if (s.tracks.length > 0) {
+          set({ hasActiveMedia: true });
+          load(0, true);
+        }
+        return;
+      }
 
       const t = s.tracks[s.index];
       if (!t) return;
@@ -467,6 +496,10 @@ export const useMusic = create<MusicState>((set, get) => {
           stopTicker();
         }
 
+        void extractMusicGradient(thumb, cleanTitle).then((res) => {
+          set({ gradient: res.gradient });
+        });
+
         // If no thumbnail yet, fetch from iTunes Search API in background
         if (!thumb) {
           void fetchArtwork(cleanTitle, cleanArtist).then((art) => {
@@ -475,6 +508,9 @@ export const useMusic = create<MusicState>((set, get) => {
               if (cur && (cur.name === cleanTitle || cur.name === payload.title)) {
                 set({
                   tracks: [{ ...cur, thumbnail: art }],
+                });
+                void extractMusicGradient(art, cleanTitle).then((res) => {
+                  set({ gradient: res.gradient });
                 });
               }
             }

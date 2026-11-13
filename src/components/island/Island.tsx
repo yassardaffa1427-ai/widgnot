@@ -6,6 +6,7 @@ import { useUI, type PageId } from '@/store/ui';
 import { useData } from '@/store/data';
 import { useTimer } from '@/store/timer';
 import { useMeeting } from '@/store/meeting';
+import { useMusic } from '@/store/music';
 import { useViewport } from '@/lib/hooks';
 import { contentSpring, instant, islandSpring, snapSpring } from '@/lib/motion';
 import { Navbar } from './Navbar';
@@ -61,6 +62,7 @@ export const FIGMA_HEIGHTS: Record<PageId, number> = {
 
 export function Island() {
   const { open, page, dir, wide, addingAct, timerMinimized, dropCompact, setOpen, goTo } = useUI();
+  const { hasActiveMedia, playing: isMusicPlaying, gradient: musicGradient } = useMusic();
   const autoHide = useData((s) => s.autoHide);
   const reduce = useReducedMotion();
   const vp = useViewport();
@@ -278,8 +280,28 @@ const H_AI_WIDE = Math.round(410 * 1.45); // tinggi maximize AI (+45% = 595px)
                   <TimerMinimize controls={controls} onDragBegin={() => { dragged.current = false; }} />
                 ) : (
                   <>
+                    {/* Background Bottom Dynamic Music Glow Gradient (Figma 5:2927) */}
+                    <AnimatePresence>
+                      {page === 'music' && hasActiveMedia && (
+                        <motion.div
+                          key="music-glow-gradient"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: isMusicPlaying ? 1 : 0.6 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.5, ease: 'easeInOut' }}
+                          style={{
+                            position: 'absolute',
+                            inset: 0,
+                            background: musicGradient,
+                            pointerEvents: 'none',
+                            zIndex: 0,
+                            borderRadius: 'inherit',
+                          }}
+                        />
+                      )}
+                    </AnimatePresence>
                     <Navbar controls={controls} onDragBegin={() => { dragged.current = false; }} />
-                    <div className="body">
+                    <div className="body" style={{ position: 'relative', zIndex: 1 }}>
                       <div className="body__scroll" style={page === 'ai' ? { display: 'flex', flexDirection: 'column', height: '100%' } : undefined}>
                         <AnimatePresence initial={false} mode="wait" custom={dir}>
                           <motion.div
@@ -292,7 +314,9 @@ const H_AI_WIDE = Math.round(410 * 1.45); // tinggi maximize AI (+45% = 595px)
                         </AnimatePresence>
                       </div>
                     </div>
-                    <Pager />
+                    <div style={{ position: 'relative', zIndex: 1 }}>
+                      <Pager />
+                    </div>
                   </>
                 )}
               </motion.div>
