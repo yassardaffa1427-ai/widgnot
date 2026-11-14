@@ -16,6 +16,8 @@ interface UIState {
   timerMinimized: boolean;
   /** true saat widget drop diminimalkan (tinggi 245px) */
   dropCompact: boolean;
+  /** true saat speech bubble deadline alert sedang terlihat di layar */
+  bubbleVisible: boolean;
   setOpen: (open: boolean) => void;
   go: (d: 1 | -1) => void;
   goTo: (p: PageId) => void;
@@ -23,6 +25,7 @@ interface UIState {
   setAddingAct: (v: boolean) => void;
   setTimerMinimized: (v: boolean) => void;
   setDropCompact: (v: boolean) => void;
+  setBubbleVisible: (v: boolean) => void;
 }
 
 export const useUI = create<UIState>((set, get) => ({
@@ -33,6 +36,7 @@ export const useUI = create<UIState>((set, get) => ({
   addingAct: false,
   timerMinimized: false,
   dropCompact: false,
+  bubbleVisible: false,
   setOpen: (open) =>
     set({
       open,
@@ -54,4 +58,5 @@ export const useUI = create<UIState>((set, get) => ({
   setAddingAct: (addingAct) => set({ addingAct }),
   setTimerMinimized: (timerMinimized) => set({ timerMinimized }),
   setDropCompact: (dropCompact) => set({ dropCompact }),
+  setBubbleVisible: (bubbleVisible) => set({ bubbleVisible }),
 }));

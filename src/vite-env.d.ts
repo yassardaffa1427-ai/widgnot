@@ -45,6 +45,8 @@ interface Window {
       h: number;
       open: boolean;
       dragging: boolean;
+      has_bubble?: boolean;
+      is_left_dock?: boolean;
     }) => void;
   };
 }

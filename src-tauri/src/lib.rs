@@ -107,6 +107,10 @@ pub struct WidgetBounds {
     pub h: f64,
     pub open: bool,
     pub dragging: bool,
+    #[serde(default)]
+    pub has_bubble: bool,
+    #[serde(default)]
+    pub is_left_dock: bool,
 }
 
 impl Default for WidgetBounds {
@@ -118,6 +122,8 @@ impl Default for WidgetBounds {
             h: 84.0,
             open: false,
             dragging: false,
+            has_bubble: false,
+            is_left_dock: false,
         }
     }
 }
@@ -363,10 +369,17 @@ pub fn run() {
                                         let cx = pt.x as f64 / scale;
                                         let cy = pt.y as f64 / scale;
 
-                                        let pad_top = if bounds.open { 14.0 } else { 190.0 };
-                                        let pad_bottom = 14.0;
-                                        let pad_left = if bounds.open { 14.0 } else { 340.0 };
-                                        let pad_right = if bounds.open { 14.0 } else { 340.0 };
+                                        let (pad_top, pad_bottom, pad_left, pad_right) = if bounds.open {
+                                            (10.0, 10.0, 10.0, 10.0)
+                                        } else if bounds.has_bubble {
+                                            let pad_l = if bounds.is_left_dock { 8.0 } else { 320.0 };
+                                            let pad_r = if bounds.is_left_dock { 320.0 } else { 8.0 };
+                                            (170.0, 8.0, pad_l, pad_r)
+                                        } else {
+                                            // Normal idle pill 84x84 (tanpa bubble):
+                                            // Presisi di sekeliling batas pill saja, window di luar area ini 100% click-through!
+                                            (6.0, 6.0, 8.0, 8.0)
+                                        };
 
                                         cx >= (bounds.x - pad_left)
                                             && cx <= (bounds.x + bounds.w + pad_right)

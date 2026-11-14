@@ -142,3 +142,4 @@ export async function extractMusicGradient(imageUrl?: string, titleSeed: string 
     img.src = imageUrl;
   });
 }
+

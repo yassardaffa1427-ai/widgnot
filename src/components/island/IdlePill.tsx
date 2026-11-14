@@ -26,7 +26,7 @@ export function IdlePill({ isLeftDock = false }: IdlePillProps) {
   const timer = useTimer();
   const { playing, tracks, index } = useMusic();
   const activities = useData((s) => s.activities);
-  const { goTo, setOpen } = useUI();
+  const { goTo, setOpen, setBubbleVisible } = useUI();
 
   // Polling deadline setiap 10 detik agar realtime
   const [deadlineAlert, setDeadlineAlert] = useState<DeadlineAlert | null>(() =>
@@ -51,6 +51,13 @@ export function IdlePill({ isLeftDock = false }: IdlePillProps) {
     const interval = setInterval(update, 10000);
     return () => clearInterval(interval);
   }, [activities]);
+
+  // Sync bubble visible status to UI store for precise hit testing
+  useEffect(() => {
+    const active = Boolean(deadlineAlert && isBubbleVisible && dismissedTaskId !== deadlineAlert.id);
+    setBubbleVisible(active);
+    return () => setBubbleVisible(false);
+  }, [deadlineAlert, isBubbleVisible, dismissedTaskId, setBubbleVisible]);
 
   // Siklus kemunculan bubble setiap 60 detik sekali
   useEffect(() => {

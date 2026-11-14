@@ -61,7 +61,7 @@ export const FIGMA_HEIGHTS: Record<PageId, number> = {
 };
 
 export function Island() {
-  const { open, page, dir, wide, addingAct, timerMinimized, dropCompact, setOpen, goTo } = useUI();
+  const { open, page, dir, wide, addingAct, timerMinimized, dropCompact, bubbleVisible, setOpen, goTo } = useUI();
   const { hasActiveMedia, playing: isMusicPlaying, gradient: musicGradient } = useMusic();
   const autoHide = useData((s) => s.autoHide);
   const reduce = useReducedMotion();
@@ -160,6 +160,8 @@ const H_AI_WIDE = Math.round(410 * 1.45); // tinggi maximize AI (+45% = 595px)
         h,
         open,
         dragging,
+        has_bubble: bubbleVisible,
+        is_left_dock: idleDock === 'left' || x.get() < vp.w / 2,
       });
     };
     reportBounds();
@@ -169,7 +171,7 @@ const H_AI_WIDE = Math.round(410 * 1.45); // tinggi maximize AI (+45% = 595px)
       unsubX();
       unsubY();
     };
-  }, [w, h, open, dragging, x, y]);
+  }, [w, h, open, dragging, bubbleVisible, idleDock, vp.w, x, y]);
 
   // Esc = tutup, Alt+W = shortcut cadangan
   useEffect(() => {
