@@ -122,34 +122,6 @@ export function MusicWidget() {
                 <Skip size={24} />
               </button>
             </div>
-
-            {/* Live detection info badge */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, paddingTop: 2 }}>
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  fontSize: 12,
-                  color: 'rgba(255, 255, 255, 0.65)',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  padding: '4px 12px',
-                  borderRadius: 20,
-                }}
-              >
-                <span
-                  style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: '50%',
-                    background: '#1db954',
-                    boxShadow: '0 0 6px #1db954',
-                  }}
-                />
-                <span>Otomatis sinkron YouTube &amp; Spotify</span>
-              </div>
-            </div>
           </motion.div>
         ) : (
           /* ---------- Active Media Playing State (Figma Node 5:2927) ---------- */
