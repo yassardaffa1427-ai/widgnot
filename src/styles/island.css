@@ -444,7 +444,7 @@
 /* ---------- music (Apple Music HIG) ---------- */
 .music { display: grid; gap: 14px; padding-bottom: 6px; }
 .music__top { display: flex; align-items: center; gap: 14px; }
-.music__cover { width: 84px; height: 84px; border-radius: 20px; background-size: cover; flex: none; box-shadow: 0 10px 28px -4px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(255, 255, 255, 0.12); }
+.music__cover { width: 84px; height: 84px; border-radius: 20px; background-size: cover; flex: none; box-shadow: none; }
 .music__meta { min-width: 0; flex: 1; text-align: left; }
 .music__meta b { display: block; font-size: 17px; font-weight: 600; color: var(--label); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.3; }
 .music__meta span { display: block; font-size: 13px; color: var(--secondary-label); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; }

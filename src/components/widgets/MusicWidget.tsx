@@ -33,7 +33,7 @@ export function MusicWidget() {
         ) : !m.hasActiveMedia || !track ? (
           /* ---------- Figma Node 5:2933: Empty / No Music Here State ---------- */
           <motion.div key="empty-figma" className="music" {...fade}>
-            <div className="music__top" style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', overflow: 'hidden' }}>
+            <div className="music__top" style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%' }}>
               {/* Gray placeholder cover with disc icon */}
               <div
                 style={{
@@ -42,7 +42,7 @@ export function MusicWidget() {
                   borderRadius: 24,
                   backgroundColor: '#383838',
                   flexShrink: 0,
-                  boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)',
+                  boxShadow: 'none',
                   display: 'grid',
                   placeItems: 'center',
                 }}
@@ -154,7 +154,7 @@ export function MusicWidget() {
         ) : (
           /* ---------- Active Media Playing State (Figma Node 5:2927) ---------- */
           <motion.div key="player-active" className="music" {...fade}>
-            <div className="music__top" style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', overflow: 'hidden' }}>
+            <div className="music__top" style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%' }}>
               <motion.div
                 className="music__cover"
                 style={{
@@ -163,7 +163,7 @@ export function MusicWidget() {
                   borderRadius: 24,
                   flexShrink: 0,
                   background: track.thumbnail ? '#1b1b1b' : '#383838',
-                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+                  boxShadow: 'none',
                   position: 'relative',
                   overflow: 'hidden',
                   display: 'grid',
