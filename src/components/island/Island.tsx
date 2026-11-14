@@ -316,7 +316,7 @@ const H_AI_WIDE = Math.round(410 * 1.45); // tinggi maximize AI (+45% = 595px)
                         </AnimatePresence>
                       </div>
                     </div>
-                    <div style={{ position: 'relative', zIndex: 1 }}>
+                    <div style={{ position: 'relative', zIndex: 1, flex: 'none' }}>
                       <Pager />
                     </div>
                   </>

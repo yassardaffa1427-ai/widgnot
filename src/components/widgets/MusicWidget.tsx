@@ -21,7 +21,7 @@ export function MusicWidget() {
   );
 
   return (
-    <section className="widget" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <section className="widget" style={{ display: 'flex', flexDirection: 'column', padding: '10px 20px 6px', boxSizing: 'border-box' }}>
       {picker}
       <AnimatePresence mode="wait" initial={false}>
         {m.bt === 'pairing' ? (
@@ -32,8 +32,8 @@ export function MusicWidget() {
           </motion.div>
         ) : !m.hasActiveMedia || !track ? (
           /* ---------- Figma Node 5:2933: Empty / No Music Here State ---------- */
-          <motion.div key="empty-figma" className="music" {...fade}>
-            <div className="music__top" style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%' }}>
+          <motion.div key="empty-figma" className="music" style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', minWidth: 0, padding: 0 }} {...fade}>
+            <div className="music__top" style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', minWidth: 0, overflow: 'hidden' }}>
               {/* Gray placeholder cover with disc icon */}
               <div
                 style={{
@@ -83,14 +83,14 @@ export function MusicWidget() {
             </div>
 
             {/* Empty Track line 00.00 / 00.00 from Figma 5:2933 */}
-            <div className="music__bar">
+            <div className="music__bar" style={{ display: 'grid', gap: 4 }}>
               <div
                 style={{
                   height: 3,
                   width: '100%',
                   borderRadius: 10,
                   backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                  margin: '6px 0',
+                  margin: '4px 0',
                 }}
               />
               <div className="music__time" style={{ color: 'rgba(255, 255, 255, 0.35)', fontSize: 12 }}>
@@ -100,8 +100,8 @@ export function MusicWidget() {
             </div>
 
             {/* Play controls */}
-            <div className="music__ctrl" style={{ gap: 24, marginTop: -4 }}>
-              <button className="icon-btn" onClick={m.prev} aria-label="Sebelumnya" style={{ color: 'rgba(255,255,255,0.7)' }}>
+            <div className="music__ctrl" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
+              <button className="icon-btn" onClick={m.prev} aria-label="Sebelumnya" style={{ color: 'rgba(255,255,255,0.75)' }}>
                 <Skip dir="prev" size={24} />
               </button>
               <button
@@ -118,13 +118,13 @@ export function MusicWidget() {
               >
                 <Play size={22} />
               </button>
-              <button className="icon-btn" onClick={m.next} aria-label="Berikutnya" style={{ color: 'rgba(255,255,255,0.7)' }}>
+              <button className="icon-btn" onClick={m.next} aria-label="Berikutnya" style={{ color: 'rgba(255,255,255,0.75)' }}>
                 <Skip size={24} />
               </button>
             </div>
 
             {/* Live detection info badge */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, paddingTop: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, paddingTop: 2 }}>
               <div
                 style={{
                   display: 'inline-flex',
@@ -153,8 +153,8 @@ export function MusicWidget() {
           </motion.div>
         ) : (
           /* ---------- Active Media Playing State (Figma Node 5:2927) ---------- */
-          <motion.div key="player-active" className="music" {...fade}>
-            <div className="music__top" style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%' }}>
+          <motion.div key="player-active" className="music" style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', minWidth: 0, padding: 0 }} {...fade}>
+            <div className="music__top" style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', minWidth: 0, overflow: 'hidden' }}>
               <motion.div
                 className="music__cover"
                 style={{
@@ -272,7 +272,7 @@ export function MusicWidget() {
               </motion.button>
             </div>
 
-            <div className="music__bar">
+            <div className="music__bar" style={{ display: 'grid', gap: 4 }}>
               <input
                 className="range"
                 type="range"
@@ -283,14 +283,14 @@ export function MusicWidget() {
                 style={{ ['--p' as string]: `${ratio * 100}%` }}
                 onChange={(e) => m.seek(Number(e.target.value) / 1000)}
               />
-              <div className="music__time">
+              <div className="music__time" style={{ fontSize: 12 }}>
                 <span>{fmtMMSS(Math.floor(m.current))}</span>
                 <span>{fmtMMSS(Math.floor(dur))}</span>
               </div>
             </div>
 
-            <div className="music__ctrl" style={{ gap: 26, marginTop: -4 }}>
-              <button className="icon-btn" onClick={m.prev} aria-label="Sebelumnya">
+            <div className="music__ctrl" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 26 }}>
+              <button className="icon-btn" onClick={m.prev} aria-label="Sebelumnya" style={{ color: 'rgba(255,255,255,0.75)' }}>
                 <Skip dir="prev" size={24} />
               </button>
               <button
@@ -307,7 +307,7 @@ export function MusicWidget() {
               >
                 {m.playing ? <Pause size={22} /> : <Play size={22} />}
               </button>
-              <button className="icon-btn" onClick={m.next} aria-label="Berikutnya">
+              <button className="icon-btn" onClick={m.next} aria-label="Berikutnya" style={{ color: 'rgba(255,255,255,0.75)' }}>
                 <Skip size={24} />
               </button>
             </div>
