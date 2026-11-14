@@ -23,8 +23,17 @@
 
 ---
 
-## ✦ Fitur Utama (v2.2.3)
+## ✦ Fitur Utama (v2.3.0)
 
+- **🎙️ AI Meeting Recording, Realtime Notes & Cetak DOCX (Figma 212:2537, 207:2418, 211:2532, 155:2352)**:
+  - **Menu Opsi Titik Tiga (`•••`)**: Akses cepat di samping input chat untuk melampirkan file/gambar/video atau langsung memulai sesi rekaman rapat (*Record meeting*).
+  - **Status Merekam Aktif**: Input bar berubah menjadi state rekam interaktif dengan titik merah berdenyut (*red pulsing dot*), status *"Sedang merekam"*, dan penghitung durasi waktu maju (`00.20`, dsb.).
+  - **Transkripsi & Poin Realtime**: AI secara live mencatat ringkasan dan transkrip poin-poin rapat dari pembicaraan secara berkala menggunakan Web Speech & microphone audio stream.
+  - **Pilihan Pasca-Rapat**: Tombol instan **[Ringkaskan poin penting]** untuk menyusun ringkasan eksekutif dan **[Cetak docx]** untuk mengekspor notulen rapat lengkap ke format Microsoft Word `.docx` asli.
+  - **Idle Pill State**: Saat Island ditutup selama perekaman, pill berubah menjadi kapsul bergaris tepi merah terang (`#FF2121`) dengan ikon kamera video dan timer berjalan. Klik pada pill langsung kembali ke mode rapat.
+- **🌈 Gradient Dinamis Sinkron Lagu (Figma 5:2927)**: Latar belakang bagian bawah widget musik kini memancarkan pendaran warna gradien linear vertikal yang secara otomatis tersinkronisasi dengan warna dominan dari thumbnail cover lagu yang sedang diputar.
+- **🖱️ Zero Click-Blocking & Presisi Hit-Testing saat Idle**: Memperbaiki area hit-testing saat idle sehingga area transparan di luar kapsul pill 84x84 px 100% bebas tembus klik (*click-through*) ke aplikasi, browser, dan desktop di belakangnya.
+- **📹 Update Ikon Kamera Video (Figma 219:2343)**: Ikon monitor lama diperbarui ke ikon kamera video solid rounded yang modern dan konsisten di seluruh antarmuka.
 - **🤖 AI Chat Assistant & Multimodal (Google Lens)**: Asisten AI pintar bawaan yang mendukung Gemini, OpenAI, Claude, dan Qwen. Mendukung analisis gambar (Google Lens Mode) lewat tombol lampirkan foto, drag & drop gambar, atau `Ctrl + V`. Jawaban AI dapat diseleksi (*selectable*) untuk dicopy dengan mudah, layout responsive stick to bottom saat maximized, serta maskot Widgnot interaktif.
 - **📋 Drag once, paste later (Drag In & Drag Out)**: Menampung kumpulan gambar dengan mudah. Cukup seret (*drag*) gambar dari browser atau file explorer dan lepas di Widgnot, serta tarik (*drag out*) gambar keluar ke Figma, Discord, atau folder komputer. Menyeret gambar ke pill idle otomatis membuka widget Drop.
 - **🖱️ Freely Draggable & Click to Open**: Island dapat di-drag dan ditempatkan bebas di posisi mana pun di monitor Anda (sangat pas diletakkan di bawah Notch MacBook atau tepi layar laptop), serta dapat dibuka secara instan cukup dengan satu klik mouse pada pill saat idle (tanpa wajib menekan shortcut).
@@ -40,7 +49,6 @@
 - **📅 Calendar & Activities**: Kalender bersih tanpa footer waktu yang mengganggu.
 - **⏳ Focus & Idle Timer**: Timer squircle gradient untuk melacak waktu fokus produktif Anda.
 - **✅ Todo List**: Checklist tugas harian yang tersimpan lokal dan persisten.
-- **⚡ Zero Click-Blocking**: Monitor utama dan aplikasi lain 100% bebas diklik saat Widgnot terbuka maupun idle berkat hit-testing native.
 
 ---
 
