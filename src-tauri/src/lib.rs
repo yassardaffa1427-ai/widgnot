@@ -1,3 +1,5 @@
+mod audio_capture;
+
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
@@ -131,6 +133,7 @@ impl Default for WidgetBounds {
 pub struct AppState {
     pub bounds: std::sync::Arc<std::sync::Mutex<WidgetBounds>>,
     pub is_interactive: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    pub meeting_recorder: std::sync::Arc<std::sync::Mutex<audio_capture::MeetingRecorder>>,
 }
 
 #[cfg(target_os = "windows")]
@@ -253,6 +256,28 @@ fn toggle_bluetooth(app: tauri::AppHandle) -> serde_json::Value {
     }
 }
 
+#[tauri::command]
+fn start_meeting_audio(
+    state: tauri::State<AppState>,
+    app: tauri::AppHandle,
+) -> Result<audio_capture::AudioStartResult, String> {
+    let mut rec = state
+        .meeting_recorder
+        .lock()
+        .map_err(|_| "Gagal mengakses recorder audio".to_string())?;
+    rec.start(app)
+}
+
+#[tauri::command]
+fn stop_meeting_audio(state: tauri::State<AppState>) -> Result<(), String> {
+    let mut rec = state
+        .meeting_recorder
+        .lock()
+        .map_err(|_| "Gagal mengakses recorder audio".to_string())?;
+    rec.stop();
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -276,14 +301,19 @@ pub fn run() {
             next_os_media,
             prev_os_media,
             get_bluetooth_status,
-            toggle_bluetooth
+            toggle_bluetooth,
+            start_meeting_audio,
+            stop_meeting_audio
         ])
         .setup(|app| {
             let bounds_arc = std::sync::Arc::new(std::sync::Mutex::new(WidgetBounds::default()));
             let is_interactive_arc = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(true));
+            let recorder_arc =
+                std::sync::Arc::new(std::sync::Mutex::new(audio_capture::MeetingRecorder::default()));
             app.manage(AppState {
                 bounds: bounds_arc.clone(),
                 is_interactive: is_interactive_arc.clone(),
+                meeting_recorder: recorder_arc,
             });
 
             // Setup System Tray

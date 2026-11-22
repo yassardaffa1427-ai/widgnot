@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 export type PageId = 'music' | 'bluetooth' | 'ai' | 'note' | 'calendar' | 'timer' | 'todo' | 'drop';
 /** Urutan halaman = urutan page-dot di Figma (8 halaman dengan AI) */
@@ -28,35 +29,48 @@ interface UIState {
   setBubbleVisible: (v: boolean) => void;
 }
 
-export const useUI = create<UIState>((set, get) => ({
-  open: false,
-  page: 'music',
-  dir: 1,
-  wide: false,
-  addingAct: false,
-  timerMinimized: false,
-  dropCompact: false,
-  bubbleVisible: false,
-  setOpen: (open) =>
-    set({
-      open,
-      wide: open ? get().wide : false,
-      addingAct: open ? get().addingAct : false,
-      timerMinimized: open ? get().timerMinimized : false,
+export const useUI = create<UIState>()(
+  persist(
+    (set, get) => ({
+      open: false,
+      page: 'music',
+      dir: 1,
+      wide: false,
+      addingAct: false,
+      timerMinimized: false,
+      dropCompact: false,
+      bubbleVisible: false,
+      setOpen: (open) =>
+        set({
+          open,
+          wide: open ? get().wide : false,
+          addingAct: open ? get().addingAct : false,
+          timerMinimized: open ? get().timerMinimized : false,
+        }),
+      go: (d) => {
+        const i = PAGE_ORDER.indexOf(get().page);
+        const next = PAGE_ORDER[(i + d + PAGE_ORDER.length) % PAGE_ORDER.length];
+        set({ page: next, dir: d, wide: false, addingAct: false, timerMinimized: false });
+      },
+      goTo: (p) => {
+        const cur = PAGE_ORDER.indexOf(get().page);
+        const nx = PAGE_ORDER.indexOf(p);
+        set({ page: p, dir: nx >= cur ? 1 : -1, wide: false, addingAct: false, timerMinimized: false });
+      },
+      setWide: (wide) => set({ wide }),
+      setAddingAct: (addingAct) => set({ addingAct }),
+      setTimerMinimized: (timerMinimized) => set({ timerMinimized }),
+      setDropCompact: (dropCompact) => set({ dropCompact }),
+      setBubbleVisible: (bubbleVisible) => set({ bubbleVisible }),
     }),
-  go: (d) => {
-    const i = PAGE_ORDER.indexOf(get().page);
-    const next = PAGE_ORDER[(i + d + PAGE_ORDER.length) % PAGE_ORDER.length];
-    set({ page: next, dir: d, wide: false, addingAct: false, timerMinimized: false });
-  },
-  goTo: (p) => {
-    const cur = PAGE_ORDER.indexOf(get().page);
-    const nx = PAGE_ORDER.indexOf(p);
-    set({ page: p, dir: nx >= cur ? 1 : -1, wide: false, addingAct: false, timerMinimized: false });
-  },
-  setWide: (wide) => set({ wide }),
-  setAddingAct: (addingAct) => set({ addingAct }),
-  setTimerMinimized: (timerMinimized) => set({ timerMinimized }),
-  setDropCompact: (dropCompact) => set({ dropCompact }),
-  setBubbleVisible: (bubbleVisible) => set({ bubbleVisible }),
-}));
+    {
+      name: 'widgnot-ui',
+      partialize: (state) => ({ page: state.page }),
+      merge: (persisted, current) => {
+        const p = persisted as Partial<UIState> | undefined;
+        const validPage = p?.page && PAGE_ORDER.includes(p.page) ? p.page : current.page;
+        return { ...current, page: validPage };
+      },
+    }
+  )
+);

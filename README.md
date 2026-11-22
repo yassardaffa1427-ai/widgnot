@@ -25,15 +25,19 @@
 
 ## ✦ Fitur Utama (v2.3.0)
 
-- **🎙️ AI Meeting Recording, Realtime Notes & Cetak DOCX (Figma 212:2537, 207:2418, 211:2532, 155:2352)**:
+- **🎙️ AI Meeting Recording (System Audio WASAPI + Mic), Realtime Notes & Cetak DOCX (Figma 212:2537, 207:2418, 211:2532, 155:2352)**:
   - **Menu Opsi Titik Tiga (`•••`)**: Akses cepat di samping input chat untuk melampirkan file/gambar/video atau langsung memulai sesi rekaman rapat (*Record meeting*).
-  - **Status Merekam Aktif**: Input bar berubah menjadi state rekam interaktif dengan titik merah berdenyut (*red pulsing dot*), status *"Sedang merekam"*, dan penghitung durasi waktu maju (`00.20`, dsb.).
-  - **Transkripsi & Poin Realtime**: AI secara live mencatat ringkasan dan transkrip poin-poin rapat dari pembicaraan secara berkala menggunakan Web Speech & microphone audio stream.
-  - **Pilihan Pasca-Rapat**: Tombol instan **[Ringkaskan poin penting]** untuk menyusun ringkasan eksekutif dan **[Cetak docx]** untuk mengekspor notulen rapat lengkap ke format Microsoft Word `.docx` asli.
+  - **Dual Audio Capture Native (Windows WASAPI Loopback + Mikrofon)**: Merekam suara peserta rapat dari Google Meet, Zoom, Microsoft Teams, atau speaker/headset sekaligus suara mikrofon pengguna secara bersamaan.
+  - **Status Merekam Aktif**: Input bar berubah menjadi state rekam interaktif dengan titik merah berdenyut yang merespons level suara masuk, status *"Sedang merekam"*, dan penghitung durasi waktu maju.
+  - **Transkripsi AI Nyata & Poin Realtime**: Potongan audio WAV 16 kHz mono ditranskripsi langsung oleh Gemini (native audio) atau OpenAI Whisper lengkap dengan timestamp `[MM:SS]`, otomatis melewati bagian hening.
+  - **Pilihan Pasca-Rapat**: Tombol instan **[Ringkaskan poin penting]** untuk menyusun ringkasan eksekutif dari transkrip asli dan **[Cetak docx]** untuk mengekspor notulen rapat lengkap ke format Microsoft Word `.docx`.
   - **Idle Pill State**: Saat Island ditutup selama perekaman, pill berubah menjadi kapsul bergaris tepi merah terang (`#FF2121`) dengan ikon kamera video dan timer berjalan. Klik pada pill langsung kembali ke mode rapat.
-- **🌈 Gradient Dinamis Sinkron Lagu (Figma 5:2927)**: Latar belakang bagian bawah widget musik kini memancarkan pendaran warna gradien linear vertikal yang secara otomatis tersinkronisasi dengan warna dominan dari thumbnail cover lagu yang sedang diputar.
+- **📌 Persistensi Halaman Terakhir**: Menutup Widgnot dari halaman mana pun (Note, AI, Calendar, Todo, dll.) dan membukanya kembali akan langsung menampilkan halaman terakhir tersebut (tersimpan persisten), kecuali saat recording rapat atau timer sedang aktif.
+- **🌈 Gradient Dinamis Sinkron Lagu (Figma 5:2927)**: Latar belakang bagian bawah widget musik memancarkan pendaran warna gradien linear vertikal yang tersinkronisasi dengan warna dominan cover lagu yang sedang diputar, lengkap dengan ellipsis judul/artis panjang dan tampilan bersih tanpa badge berlebih.
 - **🖱️ Zero Click-Blocking & Presisi Hit-Testing saat Idle**: Memperbaiki area hit-testing saat idle sehingga area transparan di luar kapsul pill 84x84 px 100% bebas tembus klik (*click-through*) ke aplikasi, browser, dan desktop di belakangnya.
 - **📹 Update Ikon Kamera Video (Figma 219:2343)**: Ikon monitor lama diperbarui ke ikon kamera video solid rounded yang modern dan konsisten di seluruh antarmuka.
+
+> 📄 Lihat rincian lengkap perbaikan dan perubahan di [CHANGELOG.md](CHANGELOG.md).
 - **🤖 AI Chat Assistant & Multimodal (Google Lens)**: Asisten AI pintar bawaan yang mendukung Gemini, OpenAI, Claude, dan Qwen. Mendukung analisis gambar (Google Lens Mode) lewat tombol lampirkan foto, drag & drop gambar, atau `Ctrl + V`. Jawaban AI dapat diseleksi (*selectable*) untuk dicopy dengan mudah, layout responsive stick to bottom saat maximized, serta maskot Widgnot interaktif.
 - **📋 Drag once, paste later (Drag In & Drag Out)**: Menampung kumpulan gambar dengan mudah. Cukup seret (*drag*) gambar dari browser atau file explorer dan lepas di Widgnot, serta tarik (*drag out*) gambar keluar ke Figma, Discord, atau folder komputer. Menyeret gambar ke pill idle otomatis membuka widget Drop.
 - **🖱️ Freely Draggable & Click to Open**: Island dapat di-drag dan ditempatkan bebas di posisi mana pun di monitor Anda (sangat pas diletakkan di bawah Notch MacBook atau tepi layar laptop), serta dapat dibuka secara instan cukup dengan satu klik mouse pada pill saat idle (tanpa wajib menekan shortcut).

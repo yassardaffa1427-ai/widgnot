@@ -136,6 +136,8 @@ export function AIWidget() {
     isMeetingEnded,
     meetingSummary,
     isSummarizing,
+    audioLevel,
+    error: meetingError,
     startRecording,
     stopRecording,
     summarizeMeeting,
@@ -705,6 +707,24 @@ export function AIWidget() {
                 </div>
               )}
 
+              {/* Peringatan / Error Meeting (misal API Key belum diisi) */}
+              {meetingError && (
+                <div
+                  style={{
+                    marginBottom: 10,
+                    padding: '8px 10px',
+                    background: 'rgba(255, 69, 58, 0.14)',
+                    border: '1px solid rgba(255, 69, 58, 0.35)',
+                    borderRadius: 10,
+                    fontSize: 11.5,
+                    color: '#FF9F9A',
+                    lineHeight: 1.4,
+                  }}
+                >
+                  ⚠️ {meetingError}
+                </div>
+              )}
+
               {/* List Poin Realtime */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, userSelect: 'text', WebkitUserSelect: 'text' }}>
                 {realtimeNotes.map((note, idx) => (
@@ -909,16 +929,19 @@ export function AIWidget() {
           onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'; }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {/* Red Pulsing Dot */}
+            {/* Red Pulsing Dot reacting to real audio level */}
             <motion.div
-              animate={{ scale: [1, 1.25, 1], opacity: [1, 0.7, 1] }}
-              transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
+              animate={{
+                scale: [1, 1.15 + Math.min(audioLevel * 0.45, 0.45), 1],
+                opacity: [1, 0.75, 1],
+              }}
+              transition={{ duration: 0.9, repeat: Infinity, ease: 'easeInOut' }}
               style={{
                 width: 14,
                 height: 14,
                 borderRadius: '50%',
                 backgroundColor: '#FF2121',
-                boxShadow: '0 0 10px rgba(255, 33, 33, 0.7)',
+                boxShadow: `0 0 ${10 + Math.round(audioLevel * 12)}px rgba(255, 33, 33, 0.85)`,
                 flexShrink: 0,
               }}
             />

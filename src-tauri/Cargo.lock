@@ -4021,6 +4021,7 @@ dependencies = [
 name = "widgnot"
 version = "2.3.0"
 dependencies = [
+ "base64 0.23.1",
  "log",
  "serde",
  "serde_json",
@@ -4028,6 +4029,7 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-global-shortcut",
  "tauri-plugin-log",
+ "windows",
 ]
 
 [[package]]

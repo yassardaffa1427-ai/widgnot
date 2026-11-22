@@ -178,13 +178,12 @@ const H_AI_WIDE = Math.round(410 * 1.45); // tinggi maximize AI (+45% = 595px)
     const on = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && open) setOpen(false);
       if (e.altKey && e.key.toLowerCase() === 'w') {
-        if (!open) goTo('music');
         setOpen(!open);
       }
     };
     window.addEventListener('keydown', on);
     return () => window.removeEventListener('keydown', on);
-  }, [open, setOpen, goTo]);
+  }, [open, setOpen]);
 
   const openWidget = () => {
     window.electronAPI?.setInteractive(true);
@@ -198,8 +197,6 @@ const H_AI_WIDE = Math.round(410 * 1.45); // tinggi maximize AI (+45% = 595px)
     const isTimerActive = t.running || t.remaining < (t.mode === 'focus' ? t.focusSec : t.breakSec);
     if (isTimerActive) {
       goTo('timer');
-    } else {
-      goTo('music');
     }
     setOpen(true);
   };

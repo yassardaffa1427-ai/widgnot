@@ -12,7 +12,7 @@ export default function App() {
       (window.electronAPI?.isElectron || navigator.userAgent.toLowerCase().includes('electron'))
   );
 
-  const { setOpen, goTo } = useUI();
+  const { setOpen } = useUI();
   const autoHide = useData((s) => s.autoHide);
 
   // satu ticker global supaya timer tetap jalan walau island tertutup
@@ -33,11 +33,10 @@ export default function App() {
     if (!window.electronAPI?.onToggleIsland) return;
     const unsub = window.electronAPI.onToggleIsland(() => {
       const currentOpen = useUI.getState().open;
-      if (!currentOpen) goTo('music');
       setOpen(!currentOpen);
     });
     return unsub;
-  }, [goTo, setOpen]);
+  }, [setOpen]);
 
   // Listener media laptop dari Electron (Spotify, YouTube, browser media)
   useEffect(() => {

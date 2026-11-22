@@ -246,7 +246,6 @@ export function DesktopShell({ children }: Props) {
           {/* Island Toggle status */}
           <button
             onClick={() => {
-              if (!open) goTo('music');
               setOpen(!open);
             }}
             style={{
