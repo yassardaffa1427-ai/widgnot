@@ -561,18 +561,27 @@ export function DropWidget() {
               minHeight: 0,
             }}
           >
-            {/* Grid 3 Baris / Kolom ke Samping, Scroll Vertikal ke Bawah */}
+            {/* Scroll Wrapper terpisah agar CSS Grid tidak memampatkan tinggi baris (aspect-ratio 1:1) */}
             <div
               style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: 12,
                 overflowY: 'auto',
-                maxHeight: 270,
+                overflowX: 'hidden',
+                maxHeight: 264,
                 padding: '4px 2px 8px',
                 scrollbarWidth: 'none',
               }}
             >
+              {/* Grid 3 Kolom ke Samping dengan Gap Vertikal == Gap Horizontal (12px) */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                  columnGap: 12,
+                  rowGap: 12,
+                  gridAutoRows: 'max-content',
+                  alignContent: 'start',
+                }}
+              >
               {items.map((it) => {
                 const isSelected = selectedId === it.id;
                 const isCopied = copiedId === it.id;
@@ -739,6 +748,7 @@ export function DropWidget() {
                 <span style={{ fontSize: 26, fontWeight: 300, lineHeight: 1 }}>+</span>
                 <span>Add / Paste</span>
               </button>
+              </div>
             </div>
           </motion.div>
         )}

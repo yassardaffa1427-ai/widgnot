@@ -15,6 +15,8 @@
   - Menghapus badge *"Otomatis sinkron YouTube & Spotify"* dari tampilan Music kosong agar lebih bersih sesuai desain Figma.
 - **Area mati tidak bisa diklik di sekitar Idle Pill:**
   - Memperketat padding hit-testing di `src-tauri/src/lib.rs` agar area di luar kapsul pill 84×84 px 100% *click-through*.
+- **Kartu menumpuk vertikal pada tampilan maximize "Drag once, paste later":**
+  - Memisahkan wrapper scroll vertikal dari elemen CSS Grid di `src/components/widgets/DropWidget.tsx` serta menetapkan `rowGap: 12` = `columnGap: 12` dengan `gridAutoRows: 'max-content'` agar kartu `1:1` tidak terkompresi/menumpuk saat mencapai $\ge 3$ baris.
 
 ### ✨ Fitur Baru
 - **AI Meeting Recording, Ringkasan Eksekutif & Ekspor `.docx`** (Figma `212:2537`, `207:2418`, `211:2532`, `155:2352`).
