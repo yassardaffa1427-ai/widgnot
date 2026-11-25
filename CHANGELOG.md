@@ -7,6 +7,11 @@
   - Mengganti pendekatan lama berbasis `webkitSpeechRecognition` (yang tidak didukung di WebView2 Windows dan tidak menangkap suara sistem) dengan perekaman **Windows WASAPI Loopback + Mikrofon** secara native di backend Rust (`src-tauri/src/audio_capture.rs`).
   - Kini seluruh suara peserta Google Meet, Zoom, Teams, atau speaker/headset sekaligus suara mikrofon pengguna direkam dan digabung ke WAV 16 kHz mono, lalu ditranskripsikan secara realtime oleh Gemini (native audio input) atau OpenAI Whisper dengan timestamp `[MM:SS]`.
   - Menghapus teks placeholder palsu, menambahkan deteksi keheningan otomatis, indikator level suara pada titik merah rekam, serta peringatan jika API Key AI belum diisi.
+- **Penyusunan Otomatis Poin-Poin Penting Rapat oleh AI (Bukan Sekadar Transkrip Mentah):**
+  - Mengubah alur setelah merekam rapat agar AI otomatis mengolah rekaman menjadi **Poin-Poin Penting Rapat** yang terstruktur (*Ringkasan Konteks*, *Poin Pembahasan*, *Keputusan & Kesimpulan*, serta *Action Items* / *Tindak Lanjut*), alih-alih hanya menampilkan transkrip mentah per baris waktu.
+  - Menghapus kata pengisi (*filler words*), menjembatani kalimat yang terpotong antar segmen, dan menonjolkan data krusial seperti nama orang, angka, dan tenggat waktu.
+  - Tampilan widget kini langsung menampilkan hasil ringkasan poin penting lengkap dengan tautan *accordion* untuk melihat transkrip mentah jika sewaktu-waktu dibutuhkan.
+  - Dokumen Word (`.docx`) hasil ekspor kini rapi dan profesional dengan format *heading* & *bold* asli, berfokus langsung pada intisari rapat.
 - **Halaman selalu kembali ke Music saat dibuka ulang:**
   - Menambahkan persistensi `page` pada `useUI` (`src/store/ui.ts`) dan menghapus paksa reset ke `music` saat membuka ulang island dari pill, shortcut `Alt+W`, maupun status bar (`Island.tsx`, `App.tsx`, `DesktopShell.tsx`). Kini island otomatis membuka fitur terakhir yang sebelumnya ditutup (kecuali saat recording meeting atau timer sedang aktif).
 - **Bug tampilan Music Widget (judul memanjang & tombol player hilang):**

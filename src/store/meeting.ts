@@ -103,7 +103,7 @@ async function transcribeAudioChunk(
 
   if (provider === 'gemini') {
     const prompt =
-      'Kamu adalah notulen rapat profesional. Dengarkan audio rapat ini (bisa dari Google Meet, Zoom, atau mikrofon) lalu transkripsikan ucapan yang benar-benar terdengar dalam bahasa aslinya (Indonesia/Inggris). Tulis langsung dalam 1-3 poin kalimat singkat yang akurat tanpa kata pengantar. Jika hanya sunyi, noise latar, atau tidak ada ucapan manusia yang jelas, balas persis dengan: [SILENCE]';
+      'Dengarkan potongan audio rapat ini lalu transkripsikan ucapan yang terdengar secara akurat dalam bahasa aslinya (Indonesia/Inggris) tanpa kata pengantar. Jika hanya sunyi, noise latar, atau tidak ada ucapan manusia yang jelas, balas persis dengan: [SILENCE]';
 
     const candidates = getGeminiModelCandidates(modelLabel);
     let lastErr = '';
@@ -144,7 +144,6 @@ async function transcribeAudioChunk(
 
         const errBody = await res.json().catch(() => ({}));
         lastErr = errBody?.error?.message || `HTTP ${res.status}`;
-        // If 404/400 (model unsupported), try next Gemini model
         if (res.status === 404 || res.status === 400) {
           continue;
         }
@@ -265,7 +264,7 @@ export const useMeeting = create<MeetingState>((set, get) => ({
       audioSourceLabel: '',
       error: hasKey
         ? null
-        : 'Masukkan API Key Gemini atau OpenAI (ikon kunci 🔑) agar audio rapat dapat ditranskripsi oleh AI.',
+        : 'Masukkan API Key Gemini atau OpenAI (ikon kunci 🔑) agar audio rapat dapat ditranskripsi & dirangkum oleh AI.',
     });
 
     const handleAudioChunk = async (base64: string, mimeType: string) => {
@@ -276,7 +275,7 @@ export const useMeeting = create<MeetingState>((set, get) => ({
       pendingTranscriptions += 1;
       const ts = formatTimestamp(get().durationSeconds);
       if (get().isRecording) {
-        set({ interimText: 'AI sedang mentranskripsi percakapan...' });
+        set({ interimText: 'Mencatat pembicaraan rapat...' });
       }
 
       try {
@@ -297,9 +296,9 @@ export const useMeeting = create<MeetingState>((set, get) => ({
             .filter(Boolean);
 
           if (lines.length > 0) {
-            const stamped = lines.map((line, i) => (i === 0 ? `[${ts}] ${line}` : line));
+            const joined = lines.join(' ');
             set((s) => ({
-              realtimeNotes: [...s.realtimeNotes, ...stamped],
+              realtimeNotes: [...s.realtimeNotes, `[${ts}] ${joined}`],
               error: null,
             }));
           }
@@ -307,7 +306,7 @@ export const useMeeting = create<MeetingState>((set, get) => ({
       } finally {
         pendingTranscriptions = Math.max(0, pendingTranscriptions - 1);
         if (pendingTranscriptions === 0 && get().isRecording) {
-          set({ interimText: 'Mendengarkan audio rapat secara realtime...' });
+          set({ interimText: 'Mendengarkan jalannya rapat (nanti otomatis dirangkum AI saat selesai)...' });
         }
       }
     };
@@ -339,10 +338,9 @@ export const useMeeting = create<MeetingState>((set, get) => ({
 
         set({
           audioSourceLabel: label,
-          realtimeNotes: [`Merekam: ${label}`],
           interimText: hasKey
-            ? 'Mendengarkan audio rapat secara realtime...'
-            : 'Audio direkam, tetapi butuh API Key untuk transkripsi AI.',
+            ? 'Mendengarkan jalannya rapat (nanti otomatis dirangkum AI saat selesai)...'
+            : 'Audio direkam, tetapi butuh API Key untuk transkripsi & ringkasan AI.',
         });
         return;
       } catch (err) {
@@ -363,7 +361,6 @@ export const useMeeting = create<MeetingState>((set, get) => ({
       if (navigator.mediaDevices?.getDisplayMedia) {
         try {
           stream = await navigator.mediaDevices.getDisplayMedia({ audio: true, video: true });
-          // Matikan track video karena kita hanya butuh audio tab/sistem
           stream.getVideoTracks().forEach((t) => t.stop());
         } catch {
           stream = null;
@@ -410,10 +407,9 @@ export const useMeeting = create<MeetingState>((set, get) => ({
 
       set({
         audioSourceLabel: 'Audio Browser / Mikrofon',
-        realtimeNotes: ['Merekam: Audio Browser / Mikrofon'],
         interimText: hasKey
-          ? 'Mendengarkan audio rapat secara realtime...'
-          : 'Masukkan API Key AI agar audio bisa ditranskripsi.',
+          ? 'Mendengarkan jalannya rapat (nanti otomatis dirangkum AI saat selesai)...'
+          : 'Masukkan API Key AI agar audio bisa ditranskripsi & dirangkum.',
       });
     } catch (err) {
       cleanupListeners();
@@ -434,7 +430,9 @@ export const useMeeting = create<MeetingState>((set, get) => ({
     set({
       isRecording: false,
       audioLevel: 0,
-      interimText: 'Menyelesaikan transkripsi potongan audio terakhir...',
+      isMeetingEnded: true,
+      isSummarizing: true,
+      interimText: 'Menyelesaikan rekaman & mengolah poin-poin penting dengan AI...',
     });
 
     if (isTauri()) {
@@ -451,27 +449,18 @@ export const useMeeting = create<MeetingState>((set, get) => ({
       }
     }
 
-    // Tunggu sebentar agar potongan audio terakhir selesai ditranskrip oleh AI (maks 8 detik)
+    // Tunggu hingga potongan audio terakhir selesai ditranskrip oleh AI (maks 10 detik)
     const startWait = Date.now();
-    await new Promise((r) => setTimeout(r, 400));
-    while (pendingTranscriptions > 0 && Date.now() - startWait < 8000) {
+    await new Promise((r) => setTimeout(r, 450));
+    while (pendingTranscriptions > 0 && Date.now() - startWait < 10000) {
       await new Promise((r) => setTimeout(r, 250));
     }
 
     cleanupListeners();
+    set({ interimText: '' });
 
-    set((s) => ({
-      isRecording: false,
-      interimText: '',
-      isMeetingEnded: true,
-      realtimeNotes:
-        s.realtimeNotes.length <= 1
-          ? [
-              ...s.realtimeNotes,
-              'Tidak ada percakapan suara yang terdeteksi selama rekaman (pastikan volume audio/GMeet aktif dan API Key valid).',
-            ]
-          : [...s.realtimeNotes, 'Sesi rekaman meeting selesai.'],
-    }));
+    // Workflow baru: Begitu rekaman selesai, langsung ubah transkrip awal-akhir menjadi Poin-Poin Penting saja dengan kecerdasan AI
+    await get().summarizeMeeting();
   },
 
   summarizeMeeting: async (apiKey?: string, modelLabel?: string) => {
@@ -494,14 +483,42 @@ export const useMeeting = create<MeetingState>((set, get) => ({
 
     if (!actualTranscript.trim()) {
       set({
-        meetingSummary:
-          'Belum ada transkrip pembicaraan yang terekam untuk diringkas. Pastikan audio Google Meet / mikrofon terdengar dan API Key aktif.',
+        meetingSummary: null,
+        error:
+          'Tidak ada percakapan suara yang terekam selama sesi meeting (pastikan suara Google Meet / mikrofon aktif dan API Key valid).',
         isSummarizing: false,
       });
       return;
     }
 
-    const prompt = `Berikut adalah transkrip realtime dari rapat:\n\n${actualTranscript}\n\nTolong buatkan ringkasan eksekutif poin-poin penting dalam bahasa Indonesia yang rapi dengan format:\n1. Poin Utama Pembahasan\n2. Keputusan Penting\n3. Action Items (Tindak Lanjut)`;
+    const prompt = `Kamu adalah asisten notulen rapat eksekutif yang sangat cerdas dan teliti.
+Berikut adalah rekaman transkrip mentah dari awal sampai akhir rapat (terdiri dari potongan waktu per beberapa detik, mungkin mengandung kata jeda "eh", cek suara/layar, basa-basi, atau kalimat yang terbelah antar-timestamp):
+
+--- TRANSKRIP MENTAH ---
+${actualTranscript}
+--- AKHIR TRANSKRIP ---
+
+Tugasmu:
+Olahlah seluruh percakapan di atas menjadi **Notulen Poin-Poin Penting Rapat** yang bersih, utuh, padat, dan profesional dalam bahasa Indonesia.
+Aturan penting:
+- BUANG semua basa-basi, cek mikrofon/layar ("suara kedengaran?", "layar kelihatan?"), gumaman ("eh", "anu"), dan pengulangan kata.
+- SATUKAN kalimat yang terpotong antar-timestamp sehingga menjadi poin pemikiran yang utuh dan akurat.
+- JANGAN menghilangkan detail penting seperti nama orang/dosen/tim, angka/jumlah, alasan utama, kendala, tenggat waktu, maupun solusi yang dibahas.
+- Jangan menyalin mentah timestamp [00:12] dsb. Tulis murni poin-poin intisarinya saja.
+
+Gunakan struktur persis berikut:
+## Ringkasan Konteks Rapat
+(1-2 kalimat singkat yang menjelaskan topik utama dan tujuan rapat ini)
+
+## Poin-Poin Penting Pembahasan
+- **Subtopik / Inti Poin**: Penjelasan ringkas, jelas, dan akurat sesuai fakta pembicaraan.
+(tambahkan poin seperlunya sesuai seluruh isi diskusi dari awal hingga akhir)
+
+## Keputusan & Kesimpulan
+- Poin keputusan atau kesimpulan yang disepakati dalam rapat.
+
+## Tindak Lanjut (Action Items)
+- Langkah konkret yang perlu dilakukan beserta pihak terkait (jika disebutkan dalam rapat).`;
 
     if (key) {
       if (provider === 'gemini') {
@@ -514,6 +531,10 @@ export const useMeeting = create<MeetingState>((set, get) => ({
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   contents: [{ parts: [{ text: prompt }] }],
+                  generationConfig: {
+                    temperature: 0.2,
+                    maxOutputTokens: 4096,
+                  },
                 }),
               }
             );
@@ -540,6 +561,8 @@ export const useMeeting = create<MeetingState>((set, get) => ({
             },
             body: JSON.stringify({
               model: model || 'gpt-4o-mini',
+              temperature: 0.2,
+              max_tokens: 4096,
               messages: [{ role: 'user', content: prompt }],
             }),
           });
@@ -554,25 +577,50 @@ export const useMeeting = create<MeetingState>((set, get) => ({
         } catch {
           // fallback below
         }
+      } else if (provider === 'anthropic') {
+        try {
+          const res = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': key,
+              'anthropic-version': '2023-06-01',
+            },
+            body: JSON.stringify({
+              model: model || 'claude-3-haiku-20240307',
+              max_tokens: 4096,
+              messages: [{ role: 'user', content: prompt }],
+            }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const generatedSummary = data.content?.[0]?.text;
+            if (generatedSummary) {
+              set({ meetingSummary: generatedSummary.trim(), isSummarizing: false });
+              return;
+            }
+          }
+        } catch {
+          // fallback below
+        }
       }
     }
 
-    // Fallback ringkasan langsung dari transkrip asli (tanpa teks palsu)
-    const bulletItems = actualTranscript
-      .split('\n')
-      .map((n) => `• ${n}`)
-      .join('\n');
-
     set({
-      meetingSummary: `📌 Ringkasan Transkrip Rapat:\n\n${bulletItems}`,
+      error: 'Gagal menyusun poin penting dengan AI (periksa koneksi internet atau kuota API Key), coba klik "Ringkaskan ulang".',
       isSummarizing: false,
     });
   },
 
   exportDocx: async () => {
+    // Pastikan sudah dirangkum menjadi poin penting oleh AI sebelum diekspor ke .docx
+    if (!get().meetingSummary && get().realtimeNotes.length > 0 && !get().isSummarizing) {
+      await get().summarizeMeeting();
+    }
+
     const { realtimeNotes, meetingSummary, formatDuration } = get();
     await generateAndDownloadMeetingDocx({
-      title: 'Notulen Rapat (Meeting Minutes)',
+      title: 'Notulen Poin Penting Rapat',
       durationFormatted: formatDuration(),
       realtimeNotes,
       summary: meetingSummary,

@@ -137,6 +137,7 @@ export function AIWidget() {
     meetingSummary,
     isSummarizing,
     audioLevel,
+    audioSourceLabel,
     error: meetingError,
     startRecording,
     stopRecording,
@@ -145,6 +146,8 @@ export function AIWidget() {
     resetMeeting,
     formatDuration,
   } = useMeeting();
+
+  const [showRawTranscript, setShowRawTranscript] = useState(false);
 
   const [input, setInput] = useState('');
   const [attachedImage, setAttachedImage] = useState<string | null>(null);
@@ -657,7 +660,7 @@ export function AIWidget() {
                 boxShadow: '0 4px 18px rgba(0, 0, 0, 0.25)',
               }}
             >
-              {/* Header: Ai sedang mengetik secara realtime — Figma 207:2418 */}
+              {/* Header: Ai sedang mengetik secara realtime / Poin Penting Rapat — Figma 207:2418 */}
               <div
                 style={{
                   display: 'flex',
@@ -669,9 +672,22 @@ export function AIWidget() {
                   gap: 8,
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, fontSize: 13, color: '#FFFFFF' }}>
-                  <span>{isRecording ? 'Ai sedang mengetik secara realtime' : 'Notulen Rapat Selesai'}</span>
-                  {isRecording && <StreamDot />}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, fontSize: 13, color: '#FFFFFF' }}>
+                    <span>
+                      {isRecording
+                        ? 'Ai sedang mencatat rapat'
+                        : isSummarizing
+                          ? 'AI menyusun poin-poin penting'
+                          : 'Poin-Poin Penting Rapat'}
+                    </span>
+                    {(isRecording || isSummarizing) && <StreamDot />}
+                  </div>
+                  {isRecording && audioSourceLabel && (
+                    <span style={{ fontSize: 10.5, color: 'var(--tertiary-label)' }}>
+                      🎙️ {audioSourceLabel}
+                    </span>
+                  )}
                 </div>
                 <span
                   style={{
@@ -681,31 +697,12 @@ export function AIWidget() {
                     backgroundColor: 'rgba(255, 255, 255, 0.06)',
                     padding: '2px 6px',
                     borderRadius: 6,
+                    flexShrink: 0,
                   }}
                 >
                   {formatDuration()}
                 </span>
               </div>
-
-              {/* Ringkasan Poin Penting (jika sudah diringkas) */}
-              {meetingSummary && (
-                <div
-                  style={{
-                    marginBottom: 12,
-                    padding: '10px 12px',
-                    background: 'rgba(10, 132, 255, 0.12)',
-                    border: '1px solid rgba(10, 132, 255, 0.3)',
-                    borderRadius: 12,
-                    fontSize: 12.5,
-                    whiteSpace: 'pre-wrap',
-                    color: '#E5E5EA',
-                    userSelect: 'text',
-                    WebkitUserSelect: 'text',
-                  }}
-                >
-                  {meetingSummary}
-                </div>
-              )}
 
               {/* Peringatan / Error Meeting (misal API Key belum diisi) */}
               {meetingError && (
@@ -725,24 +722,110 @@ export function AIWidget() {
                 </div>
               )}
 
-              {/* List Poin Realtime */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, userSelect: 'text', WebkitUserSelect: 'text' }}>
-                {realtimeNotes.map((note, idx) => (
-                  <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-                    <span style={{ color: '#0a84ff', marginTop: 1, fontSize: 11 }}>•</span>
-                    <span style={{ flex: 1, color: '#D1D1D6', fontSize: 12.5 }}>{note}</span>
-                  </div>
-                ))}
-                {interimText && (
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, opacity: 0.7, fontStyle: 'italic' }}>
-                    <span style={{ color: '#0a84ff', marginTop: 1, fontSize: 11 }}>•</span>
-                    <span style={{ flex: 1, color: '#8E8E93', fontSize: 12.5 }}>{interimText}...</span>
-                  </div>
-                )}
-              </div>
+              {/* State 1: Sedang diolah AI menjadi poin penting setelah rekaman selesai */}
+              {isMeetingEnded && isSummarizing && (
+                <div
+                  style={{
+                    padding: '12px',
+                    background: 'rgba(10, 132, 255, 0.1)',
+                    border: '1px solid rgba(10, 132, 255, 0.25)',
+                    borderRadius: 12,
+                    fontSize: 12.5,
+                    color: '#E5E5EA',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                  }}
+                >
+                  <span>✨</span>
+                  <span>Mengolah seluruh percakapan rapat dari awal hingga akhir menjadi poin-poin penting...</span>
+                </div>
+              )}
+
+              {/* State 2: Hasil Poin-Poin Penting dari Kecerdasan AI (Utama setelah rekaman selesai) */}
+              {meetingSummary && !isSummarizing && (
+                <div
+                  style={{
+                    padding: '10px 12px',
+                    background: 'rgba(10, 132, 255, 0.12)',
+                    border: '1px solid rgba(10, 132, 255, 0.3)',
+                    borderRadius: 12,
+                    fontSize: 12.5,
+                    whiteSpace: 'pre-wrap',
+                    color: '#E5E5EA',
+                    userSelect: 'text',
+                    WebkitUserSelect: 'text',
+                    lineHeight: 1.55,
+                  }}
+                >
+                  {meetingSummary.replace(/^#{1,3}\s+/gm, '📌 ').replace(/\*\*(.+?)\*\*/g, '$1')}
+                </div>
+              )}
+
+              {/* State 3: Saat masih merekam (tampilkan tangkapan live), atau opsional lihat transkrip mentah */}
+              {(isRecording || (!meetingSummary && !isSummarizing)) && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, userSelect: 'text', WebkitUserSelect: 'text' }}>
+                  {realtimeNotes.map((note, idx) => (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                      <span style={{ color: '#0a84ff', marginTop: 1, fontSize: 11 }}>•</span>
+                      <span style={{ flex: 1, color: '#D1D1D6', fontSize: 12.5 }}>{note}</span>
+                    </div>
+                  ))}
+                  {interimText && (
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, opacity: 0.7, fontStyle: 'italic' }}>
+                      <span style={{ color: '#0a84ff', marginTop: 1, fontSize: 11 }}>•</span>
+                      <span style={{ flex: 1, color: '#8E8E93', fontSize: 12.5 }}>{interimText}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Toggle opsional untuk mengintip rekaman transkrip mentah setelah dirangkum */}
+              {isMeetingEnded && meetingSummary && realtimeNotes.length > 0 && !isSummarizing && (
+                <div style={{ marginTop: 8 }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowRawTranscript((v) => !v)}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      padding: 0,
+                      color: 'var(--tertiary-label)',
+                      fontSize: 11,
+                      cursor: 'pointer',
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    {showRawTranscript
+                      ? 'Sembunyikan catatan transkrip mentah'
+                      : `Lihat transkrip mentah (${realtimeNotes.length} bagian)`}
+                  </button>
+                  {showRawTranscript && (
+                    <div
+                      style={{
+                        marginTop: 6,
+                        paddingTop: 6,
+                        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 4,
+                        maxHeight: 140,
+                        overflowY: 'auto',
+                        opacity: 0.8,
+                      }}
+                    >
+                      {realtimeNotes.map((note, idx) => (
+                        <div key={idx} style={{ fontSize: 11, color: 'var(--secondary-label)' }}>
+                          • {note}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
-            {/* Post-Meeting Action Buttons: [Ringkaskan poin penting] & [Cetak docx] */}
+            {/* Post-Meeting Action Buttons */}
             {isMeetingEnded && (
               <motion.div
                 initial={{ opacity: 0, y: 4 }}
@@ -756,63 +839,66 @@ export function AIWidget() {
                   marginTop: 2,
                 }}
               >
-                {!meetingSummary && (
+                <button
+                  type="button"
+                  onClick={() => void exportDocx()}
+                  disabled={isSummarizing}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: isSummarizing ? 'rgba(10, 132, 255, 0.45)' : '#0a84ff',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: 12,
+                    padding: '8px 14px',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: isSummarizing ? 'wait' : 'pointer',
+                    boxShadow: isSummarizing ? 'none' : '0 2px 8px rgba(10, 132, 255, 0.4)',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onPointerDown={(e) => { if (!isSummarizing) e.currentTarget.style.transform = 'scale(0.96)'; }}
+                  onPointerUp={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+                >
+                  <FileUploadIcon size={14} color="#FFFFFF" />
+                  <span>{isSummarizing ? 'Menyusun poin...' : 'Cetak docx'}</span>
+                </button>
+
+                {!isSummarizing && (
                   <button
                     type="button"
-                    onClick={() => summarizeMeeting(apiKey, modelLabel)}
-                    disabled={isSummarizing}
+                    onClick={() => void summarizeMeeting(apiKey, modelLabel)}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
                       gap: 6,
-                      background: '#0a84ff',
+                      background: 'rgba(255, 255, 255, 0.12)',
                       color: '#FFFFFF',
-                      border: 'none',
+                      border: '1px solid rgba(255, 255, 255, 0.18)',
                       borderRadius: 12,
-                      padding: '8px 14px',
+                      padding: '8px 12px',
                       fontSize: 12,
                       fontWeight: 600,
-                      cursor: isSummarizing ? 'wait' : 'pointer',
-                      boxShadow: '0 2px 8px rgba(10, 132, 255, 0.4)',
-                      transition: 'transform 0.1s ease',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
                     }}
                     onPointerDown={(e) => { e.currentTarget.style.transform = 'scale(0.96)'; }}
                     onPointerUp={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)'; }}
                   >
                     <span>✨</span>
-                    <span>{isSummarizing ? 'Meringkas...' : 'Ringkaskan poin penting'}</span>
+                    <span>{meetingSummary ? 'Ringkaskan ulang' : 'Ringkaskan poin penting'}</span>
                   </button>
                 )}
 
                 <button
                   type="button"
-                  onClick={() => exportDocx()}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    background: 'rgba(255, 255, 255, 0.12)',
-                    color: '#FFFFFF',
-                    border: '1px solid rgba(255, 255, 255, 0.18)',
-                    borderRadius: 12,
-                    padding: '8px 14px',
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
+                  onClick={() => {
+                    setShowRawTranscript(false);
+                    resetMeeting();
                   }}
-                  onPointerDown={(e) => { e.currentTarget.style.transform = 'scale(0.96)'; }}
-                  onPointerUp={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)'; }}
-                >
-                  <FileUploadIcon size={14} color="#FFFFFF" />
-                  <span>Cetak docx</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => resetMeeting()}
                   style={{
                     background: 'transparent',
                     color: 'var(--tertiary-label)',
